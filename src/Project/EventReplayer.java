@@ -1,3 +1,5 @@
+package Project;
+
 import javax.swing.JTextArea;
 import java.awt.EventQueue;
 

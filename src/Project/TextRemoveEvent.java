@@ -1,3 +1,4 @@
+package Project;
 
 public class TextRemoveEvent extends MyTextEvent {
 

@@ -1,3 +1,5 @@
+package Project;
+
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
