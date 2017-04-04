@@ -5,7 +5,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.rmi.UnknownHostException;
+import java.net.Socket;
 import javax.swing.*;
 import javax.swing.text.*;
 
@@ -28,8 +28,9 @@ public class DistributedTextEditor extends JFrame {
     private boolean connected = false;
     private DocumentEventCapturer dec = new DocumentEventCapturer();
 
-    private int port = 0;
-    private ServerSocket listenerSocket;
+    private int port = 80;
+    private ServerSocket serverSocket = null;
+    private Socket socket;
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
     
     public DistributedTextEditor() {
@@ -119,10 +120,22 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 		// TODO: Become a server listening for connections on some port.
+            //TODO: needs to check on this
 			port = Integer.parseInt(portNumber.getText());
-
-			setTitle("I'm listening on " + localAddress +":"+port);
-	    	changed = false;
+            try {
+                serverSocket = new ServerSocket(port);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            setTitle("I'm listening on " + localAddress +":"+port);
+            //Blocks the main thread waiting for incomming connection, might consider moving to other thread
+            //This way the client can be used while listening
+            try {
+                socket = serverSocket.accept();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
 	    }
