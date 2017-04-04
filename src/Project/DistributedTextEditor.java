@@ -135,6 +135,7 @@ public class DistributedTextEditor extends JFrame {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+            setTitle("Connected to " + socket.getRemoteSocketAddress());
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
@@ -146,7 +147,15 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 	    	setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
-	    	changed = false;
+            //TODO: needs to check on this
+            port = Integer.parseInt(portNumber.getText());
+            try {
+                socket = new Socket(ipaddress.getText(), port);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            setTitle("Connected to " + socket.getRemoteSocketAddress());
+            changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
 	    }
