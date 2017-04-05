@@ -56,17 +56,10 @@ public class EventReplayer implements Runnable {
 			    }
 			});
 		} 
-	    } catch (Exception _) {
-		wasInterrupted = true;
+	    } catch (Exception e) {
+			wasInterrupted = true;
 	    }
 	}
 	System.out.println("I'm the thread running the EventReplayer, now I die!");
-    }
-    
-    public void waitForOneSecond() {
-	try {
-	    Thread.sleep(1000);
-	} catch(InterruptedException _) {
-	}
     }
 }
