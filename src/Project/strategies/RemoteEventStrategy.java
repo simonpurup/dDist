@@ -6,10 +6,7 @@ import Project.TextRemoveEvent;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 
 /**
@@ -18,6 +15,7 @@ import java.net.Socket;
 public class RemoteEventStrategy implements  EventHandlerStrategy{
     private final Socket socket;
     private final JTextArea area;
+    private final Thread listenerThread;
     private  ObjectOutputStream outStream;
     private boolean closed = false;
 
@@ -30,7 +28,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
             e.printStackTrace();
         }
 
-        new Thread(new Runnable() {
+        listenerThread = new Thread(new Runnable() {
             public void run() {
                 try {
                     ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
@@ -67,16 +65,40 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                         }
                     }
                 } catch (IOException e) {
+                    if(e instanceof EOFException){
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                try {
+                                    area.insert("I got the error", 0);
+                                } catch (Exception e) {
+                                    System.err.println(e);
+				    		/* We catch all exceptions, as an uncaught exception would make the
+				     		* EDT unwind, which is now healthy.
+				     		*/
+                                }
+                            }
+                        });
+                    }
                     e.printStackTrace();
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             }
-        }).start();
+        });
+        listenerThread.start();
     }
     public void handleEvent(MyTextEvent event) {
         try {
             outStream.writeObject(event);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void close(){
+        listenerThread.interrupt();
+        try {
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

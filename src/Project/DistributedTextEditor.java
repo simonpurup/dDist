@@ -169,7 +169,7 @@ public class DistributedTextEditor extends JFrame {
     Action Disconnect = new AbstractAction("Disconnect") {
 	    public void actionPerformed(ActionEvent e) {	
 	    	setTitle("Disconnected");
-	    	// TODO
+	    	er.changeStrategy(new LocalEventStrategy(area2));
 	    }
 	};
 

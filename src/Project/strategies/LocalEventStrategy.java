@@ -17,6 +17,7 @@ public class LocalEventStrategy implements EventHandlerStrategy {
     public LocalEventStrategy(JTextArea area) {
         this.area = area;
     }
+    
 
     @Override
     public void handleEvent(MyTextEvent mte) {
