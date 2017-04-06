@@ -7,4 +7,5 @@ import Project.MyTextEvent;
  */
 public interface EventHandlerStrategy {
     void handleEvent(MyTextEvent event);
+    default void close(){}
 }

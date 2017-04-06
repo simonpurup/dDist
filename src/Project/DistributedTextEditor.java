@@ -1,5 +1,8 @@
 package Project;
 
+import Project.strategies.LocalEventStrategy;
+import Project.strategies.RemoteEventStrategy;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -102,7 +105,7 @@ public class DistributedTextEditor extends JFrame {
 		     "Try to type and delete stuff in the top area.\n" + 
 		     "Then figure out how it works.\n", 0);
 
-	er = new EventReplayer(dec, area2);
+	er = new EventReplayer(dec, area2, new LocalEventStrategy(area2));
 	ert = new Thread(er);
 	ert.start();
     }
@@ -136,6 +139,7 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
+			er.changeStrategy(new RemoteEventStrategy(socket, area2));
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
@@ -155,6 +159,7 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
+			er.changeStrategy(new RemoteEventStrategy(socket, area2));
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
