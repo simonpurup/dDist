@@ -1,8 +1,10 @@
 package Project.strategies;
 
+import Project.MyTextEvent;
+
 /**
  * Created by Simon Purup Eskildsen on 4/6/17.
  */
 public interface EventHandlerStrategy {
-    void handleEvent();
+    void handleEvent(MyTextEvent event);
 }
