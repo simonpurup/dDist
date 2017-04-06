@@ -3,10 +3,12 @@ package Project;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import javax.swing.*;
 import javax.swing.text.*;
-import javax.swing.event.*;
-import java.util.concurrent.*;
+
 
 public class DistributedTextEditor extends JFrame {
 
@@ -25,8 +27,25 @@ public class DistributedTextEditor extends JFrame {
     private boolean changed = false;
     private boolean connected = false;
     private DocumentEventCapturer dec = new DocumentEventCapturer();
+
+    private int port = 80;
+    private ServerSocket serverSocket = null;
+    private Socket socket;
+	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
     
     public DistributedTextEditor() {
+		try {
+			InetAddress localhost = InetAddress.getLocalHost();
+			localAddress = localhost.getHostAddress();
+		} catch (java.net.UnknownHostException e) {
+			System.err.println("Cannot resolve the Internet address of the local host.");
+			System.err.println(e);
+			System.exit(-1);
+			e.printStackTrace();
+			e.printStackTrace();
+		}
+
+		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
 
     	area2.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -101,8 +120,23 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 		// TODO: Become a server listening for connections on some port.
-	    	setTitle("I'm listening on xxx.xxx.xxx:zzzz");
-	    	changed = false;
+            //TODO: needs to check on this
+			port = Integer.parseInt(portNumber.getText());
+            try {
+                serverSocket = new ServerSocket(port);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            setTitle("I'm listening on " + localAddress +":"+port);
+            //Blocks the main thread waiting for incomming connection, might consider moving to other thread
+            //This way the client can be used while listening
+            try {
+                socket = serverSocket.accept();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            setTitle("Connected to " + socket.getRemoteSocketAddress());
+            changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
 	    }
@@ -113,7 +147,15 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 	    	setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
-	    	changed = false;
+            //TODO: needs to check on this
+            port = Integer.parseInt(portNumber.getText());
+            try {
+                socket = new Socket(ipaddress.getText(), port);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            setTitle("Connected to " + socket.getRemoteSocketAddress());
+            changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
 	    }
