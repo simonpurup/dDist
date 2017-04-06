@@ -72,7 +72,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                     e.printStackTrace();
                 }
             }
-        });
+        }).start();
     }
     public void handleEvent(MyTextEvent event) {
         try {

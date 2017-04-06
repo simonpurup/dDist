@@ -30,7 +30,8 @@ public class EventReplayer implements Runnable {
 		boolean wasInterrupted = false;
 		while (!wasInterrupted) {
 			try {
-				strategy.handleEvent(dec.take());
+                MyTextEvent event = dec.take();
+				strategy.handleEvent(event);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
