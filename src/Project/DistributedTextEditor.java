@@ -35,6 +35,7 @@ public class DistributedTextEditor extends JFrame {
     private ServerSocket serverSocket = null;
     private Socket socket;
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
+	private final DistributedTextEditor dte = this;
     
     public DistributedTextEditor() {
 		try {
@@ -122,7 +123,7 @@ public class DistributedTextEditor extends JFrame {
 	    public void actionPerformed(ActionEvent e) {
 	    	saveOld();
 	    	area1.setText("");
-		// TODO: Become a server listening for connections on some port.
+			// TODO: Become a server listening for connections on some port.
             //TODO: needs to check on this
 			port = Integer.parseInt(portNumber.getText());
             try {
@@ -139,7 +140,7 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
-			er.changeStrategy(new RemoteEventStrategy(socket, area2));
+			er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
@@ -159,7 +160,7 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
-			er.changeStrategy(new RemoteEventStrategy(socket, area2));
+			er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
@@ -168,15 +169,19 @@ public class DistributedTextEditor extends JFrame {
 
     Action Disconnect = new AbstractAction("Disconnect") {
 	    public void actionPerformed(ActionEvent e) {
-			area1.setText("");
-			area2.setText("");
-	    	setTitle("Disconnected");
-	    	er.changeStrategy(new LocalEventStrategy(area2));
-			changed = false;
-			Save.setEnabled(false);
-			SaveAs.setEnabled(false);
+			disconnect();
 	    }
 	};
+
+	public void disconnect(){
+		area1.setText("");
+		area2.setText("");
+		setTitle("Disconnected");
+		er.changeStrategy(new LocalEventStrategy(area2));
+		changed = false;
+		Save.setEnabled(false);
+		SaveAs.setEnabled(false);
+	}
 
     Action Save = new AbstractAction("Save") {
 	    public void actionPerformed(ActionEvent e) {

@@ -1,8 +1,6 @@
 package Project.strategies;
 
-import Project.MyTextEvent;
-import Project.TextInsertEvent;
-import Project.TextRemoveEvent;
+import Project.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,11 +14,13 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
     private final Socket socket;
     private final JTextArea area;
     private final Thread listenerThread;
-    private  ObjectOutputStream outStream;
+    private ObjectOutputStream outStream;
+    private DistributedTextEditor dte;
 
-    public RemoteEventStrategy(Socket socket, JTextArea area){
+    public RemoteEventStrategy(Socket socket, JTextArea area, DistributedTextEditor dte){
         this.socket = socket;
         this.area = area;
+        this.dte = dte;
         try {
             outStream = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException e) {
@@ -55,9 +55,9 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                                         area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
                                     } catch (Exception e) {
                                         System.err.println(e);
-				    /* We catch all axceptions, as an uncaught exception would make the
-				     * EDT unwind, which is now healthy.
-				     */
+				                        /* We catch all exceptions, as an uncaught exception would make the
+				                         * EDT unwind, which is not healthy.
+				                         */
                                     }
                                 }
                             });
@@ -65,20 +65,11 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                     }
                 } catch (IOException e) {
                     if(e instanceof EOFException){
-                        EventQueue.invokeLater(new Runnable() {
-                            public void run() {
-                                try {
-                                    area.insert("I got the error", 0);
-                                } catch (Exception e) {
-                                    System.err.println(e);
-				    		/* We catch all exceptions, as an uncaught exception would make the
-				     		* EDT unwind, which is now healthy.
-				     		*/
-                                }
-                            }
-                        });
+                        dte.disconnect();
                     }
-                    e.printStackTrace();
+                    else {
+                        e.printStackTrace();
+                    }
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -86,6 +77,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
         });
         listenerThread.start();
     }
+
     public void handleEvent(MyTextEvent event) {
         try {
             outStream.writeObject(event);
