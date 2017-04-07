@@ -65,6 +65,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                     }
                 } catch (IOException e) {
                     if(e instanceof EOFException){
+                        dte.setTitle("The peer disconnected");
                         dte.disconnect();
                     }
                     else {

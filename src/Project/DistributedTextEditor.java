@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import javax.swing.*;
 import javax.swing.text.*;
 
@@ -124,11 +125,14 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 			// TODO: Become a server listening for connections on some port.
-            //TODO: needs to check on this
-			port = Integer.parseInt(portNumber.getText());
             try {
+				port = Integer.parseInt(portNumber.getText());
                 serverSocket = new ServerSocket(port);
+			} catch (NumberFormatException e1) {
+				setTitle("ERROR: " + portNumber.getText() + " is not a valid port number");
+				e1.printStackTrace();
             } catch (IOException e1) {
+				setTitle("ERROR: Could not set up a connection at " + localAddress + ":" + port);
                 e1.printStackTrace();
             }
             setTitle("I'm listening on " + localAddress +":"+port);
@@ -136,10 +140,14 @@ public class DistributedTextEditor extends JFrame {
             //This way the client can be used while listening
             try {
                 socket = serverSocket.accept();
+			} catch (SocketTimeoutException e1) {
+				setTitle("ERROR: Connection timed out");
+				e1.printStackTrace();
             } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            setTitle("Connected to " + socket.getRemoteSocketAddress());
+				setTitle("ERROR: Failed to maintain connection");
+				e1.printStackTrace();
+			}
+			setTitle("Connected to " + socket.getRemoteSocketAddress());
 			er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
             changed = false;
 	    	Save.setEnabled(false);
@@ -153,10 +161,14 @@ public class DistributedTextEditor extends JFrame {
 	    	area1.setText("");
 	    	setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
             //TODO: needs to check on this
-            port = Integer.parseInt(portNumber.getText());
             try {
+				port = Integer.parseInt(portNumber.getText());
                 socket = new Socket(ipaddress.getText(), port);
+			} catch (NumberFormatException e1) {
+				setTitle("ERROR: " + portNumber.getText() + " is not a valid port number");
+				e1.printStackTrace();
             } catch (IOException e1) {
+				setTitle("ERROR: Could not connect to " + ipaddress.getText() + ":" + portNumber.getText());
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
