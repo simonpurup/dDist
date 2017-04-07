@@ -17,7 +17,6 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
     private final JTextArea area;
     private final Thread listenerThread;
     private  ObjectOutputStream outStream;
-    private boolean closed = false;
 
     public RemoteEventStrategy(Socket socket, JTextArea area){
         this.socket = socket;
@@ -32,7 +31,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
             public void run() {
                 try {
                     ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                    while(!closed){
+                    while(!Thread.interrupted()){
                         MyTextEvent mte = (MyTextEvent) inputStream.readObject();
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent)mte;

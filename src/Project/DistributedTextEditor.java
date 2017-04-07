@@ -167,9 +167,14 @@ public class DistributedTextEditor extends JFrame {
 	};
 
     Action Disconnect = new AbstractAction("Disconnect") {
-	    public void actionPerformed(ActionEvent e) {	
+	    public void actionPerformed(ActionEvent e) {
+			area1.setText("");
+			area2.setText("");
 	    	setTitle("Disconnected");
 	    	er.changeStrategy(new LocalEventStrategy(area2));
+			changed = false;
+			Save.setEnabled(false);
+			SaveAs.setEnabled(false);
 	    }
 	};
 
