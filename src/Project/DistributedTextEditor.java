@@ -125,6 +125,7 @@ public class DistributedTextEditor extends JFrame {
 	    	area1.setText("");
 			// TODO: Become a server listening for connections on some port.
             //TODO: needs to check on this
+			//Git check
 			port = Integer.parseInt(portNumber.getText());
             try {
                 serverSocket = new ServerSocket(port);
