@@ -127,24 +127,28 @@ public class DistributedTextEditor extends JFrame {
             //TODO: needs to check on this
 			//Git check
 			port = Integer.parseInt(portNumber.getText());
-            try {
-                serverSocket = new ServerSocket(port);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            setTitle("I'm listening on " + localAddress +":"+port);
-            //Blocks the main thread waiting for incomming connection, might consider moving to other thread
-            //This way the client can be used while listening
-            try {
-                socket = serverSocket.accept();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            setTitle("Connected to " + socket.getRemoteSocketAddress());
-			er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
-            changed = false;
-	    	Save.setEnabled(false);
-	    	SaveAs.setEnabled(false);
+			setTitle("I'm listening on " + localAddress +":"+port);
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					System.out.println(port);
+					try {
+						serverSocket = new ServerSocket(port);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					try {
+						socket = serverSocket.accept();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					setTitle("Connected to " + socket.getRemoteSocketAddress());
+					er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
+					changed = false;
+					Save.setEnabled(false);
+					SaveAs.setEnabled(false);
+				}
+			}).start();
 	    }
 	};
 
