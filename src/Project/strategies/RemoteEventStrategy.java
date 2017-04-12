@@ -66,10 +66,16 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                     }
                 } catch (IOException e) {
                     if(e instanceof EOFException){
+                        //If the connection is closed on the other end, an EOFException will be
+                        //thrown. Therefore we disconnect on this end as well.
                         dte.disconnect();
                     }
                     else if(e instanceof SocketException && e.getMessage().equals("Socket closed")){
-                        //If the connection has been closed, do nothing, as the thread is interrupted
+                        if(!Thread.interrupted()) {
+                            e.printStackTrace();
+                        }
+                        //If the connection has been closed, and the thread is interrupted, the
+                        //connection has been closed by this instance of the DTE, so do nothing.
                     } else {
                         e.printStackTrace();
                     }
@@ -86,7 +92,8 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
             outStream.writeObject(event);
         } catch (IOException e) {
             if(e instanceof SocketException && e.getMessage().equals("Socket closed")){
-                //If the connection has been closed
+                //If the connection has been closed, then do nothing. The closing of
+                //sockets is handled elsewhere.
             } else {
                 e.printStackTrace();
             }
