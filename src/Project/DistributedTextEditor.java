@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import javax.swing.*;
 import javax.swing.text.*;
 
@@ -28,7 +29,7 @@ public class DistributedTextEditor extends JFrame {
 
     private String currentFile = "Untitled";
     private boolean changed = false;
-    private boolean connected = false;
+    private boolean listening = false;
     private DocumentEventCapturer dec = new DocumentEventCapturer();
 
     private int port = 80;
@@ -128,10 +129,11 @@ public class DistributedTextEditor extends JFrame {
 			//Git check
 			port = Integer.parseInt(portNumber.getText());
 			setTitle("I'm listening on " + localAddress +":"+port);
+			area1.setEditable(false);
+			listening = true;
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
-					System.out.println(port);
 					try {
 						serverSocket = new ServerSocket(port);
 					} catch (IOException e1) {
@@ -139,11 +141,17 @@ public class DistributedTextEditor extends JFrame {
 					}
 					try {
 						socket = serverSocket.accept();
+						listening = false;
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
+							if(listening)
+							e1.printStackTrace();
 					}
-					setTitle("Connected to " + socket.getRemoteSocketAddress());
-					er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
+					if(socket != null) {
+						setTitle("Connected to " + socket.getRemoteSocketAddress());
+						er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
+					}
+					area1.setEditable(true);
 					changed = false;
 					Save.setEnabled(false);
 					SaveAs.setEnabled(false);
@@ -174,8 +182,17 @@ public class DistributedTextEditor extends JFrame {
 
     Action Disconnect = new AbstractAction("Disconnect") {
 	    public void actionPerformed(ActionEvent e) {
-			disconnect();
-	    }
+	    	if(!listening)
+				disconnect();
+	    	else {
+	    		listening = false;
+				try {
+					serverSocket.close();
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
 	};
 
 	public void disconnect(){
