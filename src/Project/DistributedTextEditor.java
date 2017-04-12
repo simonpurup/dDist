@@ -141,6 +141,7 @@ public class DistributedTextEditor extends JFrame {
 					}
 					try {
 						socket = serverSocket.accept();
+						serverSocket.close();
 						listening = false;
 					} catch (IOException e1) {
 						if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
@@ -150,6 +151,8 @@ public class DistributedTextEditor extends JFrame {
 					if(socket != null) {
 						setTitle("Connected to " + socket.getRemoteSocketAddress());
 						er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
+					} else{
+						setTitle("Disconnected");
 					}
 					area1.setEditable(true);
 					changed = false;

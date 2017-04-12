@@ -91,7 +91,8 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
         try {
             outStream.writeObject(event);
         } catch (IOException e) {
-            if(e instanceof SocketException && e.getMessage().equals("Socket closed")){
+            if(e instanceof SocketException && (e.getMessage().equals("Socket closed")
+                    || e.getMessage().equals("Broken pipe (Write failed)"))){
                 //If the connection has been closed, then do nothing. The closing of
                 //sockets is handled elsewhere.
             } else {

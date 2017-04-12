@@ -39,7 +39,8 @@ public class LocalEventStrategy implements EventHandlerStrategy {
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
                     try {
-                        if(!area.getText().equals(""))
+                        //The area might be empty during disconnect, this due to race conditions.
+                        if(!area.getText().equals("")) //if the area is empty, this will throw an exception
                             area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
                     } catch (Exception e) {
                         e.printStackTrace();
