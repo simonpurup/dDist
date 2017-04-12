@@ -41,6 +41,6 @@ public class EventReplayer implements Runnable {
 
 	public void changeStrategy(EventHandlerStrategy strategy){
         this.strategy.close();
-        this.strategy = strategy;
+		this.strategy = strategy;
     }
 }

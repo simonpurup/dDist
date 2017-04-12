@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * Created by lærerPC on 06-04-2017.
@@ -40,7 +41,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                                     try {
                                         area.insert(tie.getText(), tie.getOffset());
                                     } catch (Exception e) {
-                                        System.err.println(e);
+                                        e.printStackTrace();
 				    		/* We catch all exceptions, as an uncaught exception would make the
 				     		* EDT unwind, which is now healthy.
 				     		*/
@@ -54,7 +55,7 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                                     try {
                                         area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
                                     } catch (Exception e) {
-                                        System.err.println(e);
+                                        e.printStackTrace();
 				                        /* We catch all exceptions, as an uncaught exception would make the
 				                         * EDT unwind, which is not healthy.
 				                         */
@@ -68,6 +69,18 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                         dte.disconnect();
                     }
                     else {
+                        EventQueue.invokeLater(new Runnable() {
+                            public void run() {
+                                try {
+                                    area.insert("I got the error", 0);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+				    		/* We catch all exceptions, as an uncaught exception would make the
+				     		* EDT unwind, which is now healthy.
+				     		*/
+                                }
+                            }
+                        });
                         e.printStackTrace();
                     }
                 } catch (ClassNotFoundException e) {
@@ -82,7 +95,11 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
         try {
             outStream.writeObject(event);
         } catch (IOException e) {
-            e.printStackTrace();
+            if(e instanceof SocketException && e.getMessage().equals("Socket closed")){
+                //If the connection has been closed
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 

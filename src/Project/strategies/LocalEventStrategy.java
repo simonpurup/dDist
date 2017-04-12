@@ -27,10 +27,10 @@ public class LocalEventStrategy implements EventHandlerStrategy {
                     try {
                         area.insert(tie.getText(), tie.getOffset());
                     } catch (Exception e) {
-                        System.err.println(e);
-				    		/* We catch all exceptions, as an uncaught exception would make the
-				     		* EDT unwind, which is now healthy.
-				     		*/
+                        e.printStackTrace();
+                        /* We catch all exceptions, as an uncaught exception would make the
+				     	* EDT unwind, which is now healthy.
+				     	*/
                     }
                 }
             });
@@ -41,10 +41,10 @@ public class LocalEventStrategy implements EventHandlerStrategy {
                     try {
                         area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
                     } catch (Exception e) {
-                        System.err.println(e);
-				    /* We catch all axceptions, as an uncaught exception would make the
-				     * EDT unwind, which is now healthy.
-				     */
+                        e.printStackTrace();
+				        /* We catch all axceptions, as an uncaught exception would make the
+				        * EDT unwind, which is now healthy.
+				        */
                     }
                 }
             });
