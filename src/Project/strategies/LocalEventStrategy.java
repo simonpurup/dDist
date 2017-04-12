@@ -39,7 +39,8 @@ public class LocalEventStrategy implements EventHandlerStrategy {
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
                     try {
-                        area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
+                        if(!area.getText().equals(""))
+                            area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
                     } catch (Exception e) {
                         e.printStackTrace();
 				        /* We catch all axceptions, as an uncaught exception would make the
