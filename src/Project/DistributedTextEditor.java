@@ -177,10 +177,10 @@ public class DistributedTextEditor extends JFrame {
 	public void disconnect(){
 		setTitle("Disconnected");
 		area1.setText("");
+		er.changeStrategy(new LocalEventStrategy(area2));
 		if(!area2.getText().equals("")){
 			area2.setText("");
 		}
-		er.changeStrategy(new LocalEventStrategy(area2));
 		changed = false;
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);

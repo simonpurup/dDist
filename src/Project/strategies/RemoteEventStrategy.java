@@ -68,19 +68,9 @@ public class RemoteEventStrategy implements  EventHandlerStrategy{
                     if(e instanceof EOFException){
                         dte.disconnect();
                     }
-                    else {
-                        EventQueue.invokeLater(new Runnable() {
-                            public void run() {
-                                try {
-                                    area.insert("I got the error", 0);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-				    		/* We catch all exceptions, as an uncaught exception would make the
-				     		* EDT unwind, which is now healthy.
-				     		*/
-                                }
-                            }
-                        });
+                    else if(e instanceof SocketException && e.getMessage().equals("Socket closed")){
+                        //If the connection has been closed, do nothing, as the thread is interrupted
+                    } else {
                         e.printStackTrace();
                     }
                 } catch (ClassNotFoundException e) {
