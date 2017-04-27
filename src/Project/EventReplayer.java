@@ -52,11 +52,11 @@ public class EventReplayer implements Runnable {
 				if(!isRecievedEvent(mte)){
 					HashMap<String, Integer> vectorClock = dte.getVectorClock();
 					eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
-					while(System.nanoTime() - eventLog.get(0).time > saveTime){
+					while(eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime){
 						eventLog.remove(0);
 					}
 					vectorClock.put(dte.getLocalAddress(),vectorClock.get(dte.getLocalAddress()) +1);
-					connection.send(new EventMessage(vectorClock, mte));
+				if(connection != null)	connection.send(new EventMessage(vectorClock, mte));
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -108,6 +108,7 @@ public class EventReplayer implements Runnable {
 
 	public void connect(Socket socket) {
 		connection = new Connection(socket, this);
+		new Thread(connection).start();
 	}
 
 	public void disConnect() {
