@@ -1,8 +1,5 @@
 package Project;
 
-import Project.strategies.LocalEventStrategy;
-import Project.strategies.RemoteEventStrategy;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -17,7 +14,6 @@ import javax.swing.text.*;
 public class DistributedTextEditor extends JFrame {
 
     private JTextArea area1 = new JTextArea(20,120);
-    private JTextArea area2 = new JTextArea(20,120);     
     private JTextField ipaddress = new JTextField("IP address here");     
     private JTextField portNumber = new JTextField("Port number here");     
     
@@ -52,10 +48,7 @@ public class DistributedTextEditor extends JFrame {
 
 		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
-
-    	area2.setFont(new Font("Monospaced",Font.PLAIN,12));
     	((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
-    	area2.setEditable(false);
     	
     	Container content = getContentPane();
     	content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
@@ -65,12 +58,6 @@ public class DistributedTextEditor extends JFrame {
     					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
     					JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
     	content.add(scroll1,BorderLayout.CENTER);
-
-    	JScrollPane scroll2 = 
-    			new JScrollPane(area2, 
-    					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-    					JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-		content.add(scroll2,BorderLayout.CENTER);	
 		
 		content.add(ipaddress,BorderLayout.CENTER);	
 		content.add(portNumber,BorderLayout.CENTER);	
@@ -107,7 +94,7 @@ public class DistributedTextEditor extends JFrame {
 		     "Try to type and delete stuff in the top area.\n" + 
 		     "Then figure out how it works.\n", 0);
 
-	er = new EventReplayer(dec, area2, new LocalEventStrategy(area2));
+	er = new EventReplayer(dec, area1);
 	ert = new Thread(er);
 	ert.start();
     }
@@ -150,7 +137,6 @@ public class DistributedTextEditor extends JFrame {
 					}
 					if(socket != null) {
 						setTitle("Connected to " + socket.getRemoteSocketAddress());
-						er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
 					} else{
 						setTitle("Disconnected");
 					}
@@ -176,7 +162,6 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Connected to " + socket.getRemoteSocketAddress());
-			er.changeStrategy(new RemoteEventStrategy(socket, area2, dte));
             changed = false;
 	    	Save.setEnabled(false);
 	    	SaveAs.setEnabled(false);
@@ -201,10 +186,6 @@ public class DistributedTextEditor extends JFrame {
 	public void disconnect(){
 		setTitle("Disconnected");
 		area1.setText("");
-		er.changeStrategy(new LocalEventStrategy(area2));
-		if(!area2.getText().equals("")){
-			area2.setText("");
-		}
 		changed = false;
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);
@@ -264,6 +245,5 @@ public class DistributedTextEditor extends JFrame {
     
     public static void main(String[] arg) {
     	new DistributedTextEditor();
-    }        
-    
+    }
 }

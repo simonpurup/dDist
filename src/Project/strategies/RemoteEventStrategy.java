@@ -7,6 +7,7 @@ import java.awt.*;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 
 /**
  * Created by lærerPC on 06-04-2017.

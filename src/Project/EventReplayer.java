@@ -20,10 +20,9 @@ public class EventReplayer implements Runnable {
 	private JTextArea area;
 	private EventHandlerStrategy strategy;
 
-	public EventReplayer(DocumentEventCapturer dec, JTextArea area, EventHandlerStrategy strategy) {
+	public EventReplayer(DocumentEventCapturer dec, JTextArea area) {
 		this.dec = dec;
 		this.area = area;
-		this.strategy = strategy;
 	}
 
 	public void run() {
@@ -31,16 +30,10 @@ public class EventReplayer implements Runnable {
 		while (!wasInterrupted) {
 			try {
                 MyTextEvent event = dec.take();
-				strategy.handleEvent(event);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 		System.out.println("I'm the thread running the EventReplayer, now I die!");
 	}
-
-	public void changeStrategy(EventHandlerStrategy strategy){
-        this.strategy.close();
-		this.strategy = strategy;
-    }
 }
