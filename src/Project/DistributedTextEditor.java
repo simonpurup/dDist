@@ -111,9 +111,6 @@ public class DistributedTextEditor extends JFrame {
 	    public void actionPerformed(ActionEvent e) {
 	    	saveOld();
 	    	area1.setText("");
-			// TODO: Become a server listening for connections on some port.
-            //TODO: needs to check on this
-			//Git check
 			port = Integer.parseInt(portNumber.getText());
 			setTitle("I'm listening on " + localAddress +":"+port);
 			area1.setEditable(false);
@@ -154,7 +151,6 @@ public class DistributedTextEditor extends JFrame {
 	    	saveOld();
 	    	area1.setText("");
 	    	setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
-            //TODO: needs to check on this
             port = Integer.parseInt(portNumber.getText());
             try {
                 socket = new Socket(ipaddress.getText(), port);
