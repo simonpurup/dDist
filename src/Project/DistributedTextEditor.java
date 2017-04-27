@@ -257,6 +257,16 @@ public class DistributedTextEditor extends JFrame {
 	catch(IOException e) {
 		e.printStackTrace();	}
     }
+
+	public String getLocalAddress() {
+		return localAddress;
+	}
+
+	public Socket getSocket() {
+		return socket;
+	}
+
+
     
     public static void main(String[] arg) {
     	new DistributedTextEditor();
