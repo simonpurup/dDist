@@ -30,6 +30,17 @@ public class EventReplayer implements Runnable {
 		recievedEvents = new ArrayList<MyTextEvent>();
 	}
 
+	public synchronized  void addRecievedEvent(MyTextEvent e){
+		recievedEvents.add(e);
+	}
+
+	public synchronized  boolean isRecievedEvent(MyTextEvent e){
+		if(recievedEvents.contains(e)){
+			recievedEvents.remove(e);
+			return true;
+		}
+		else return false;
+	}
 
 	public void run() {
 		boolean wasInterrupted = false;
@@ -43,7 +54,11 @@ public class EventReplayer implements Runnable {
 		}
 	}
 
-	public void handleEvent(MyTextEvent mte) {
+	public void handleMessage(EventMessage message){
+		printMessage(message.getTextEvent());
+	}
+
+	public void printMessage(MyTextEvent mte) {
 		if (mte instanceof TextInsertEvent) {
 			final TextInsertEvent tie = (TextInsertEvent)mte;
 			EventQueue.invokeLater(new Runnable() {
