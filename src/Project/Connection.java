@@ -17,6 +17,7 @@ public class Connection implements Runnable {
     private final EventReplayer er;
     private ObjectOutputStream outStream;
     private ObjectInputStream inputStream;
+    private boolean running;
 
     public Connection(Socket socket, EventReplayer er) {
         this.socket = socket;
@@ -34,7 +35,8 @@ public class Connection implements Runnable {
 
     //Listens for incomming
     public void run() {
-        while (!Thread.interrupted()) {
+        running = true;
+        while (running) {
             try {
                 EventMessage message = (EventMessage) inputStream.readObject();
                 er.handleMessage(message);
@@ -73,6 +75,15 @@ public class Connection implements Runnable {
             } else {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void disconnect() {
+        running = false;
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

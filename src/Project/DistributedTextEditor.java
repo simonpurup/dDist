@@ -141,6 +141,7 @@ public class DistributedTextEditor extends JFrame {
 					}
 					try {
 						socket = serverSocket.accept();
+						er.connect(socket);
 						serverSocket.close();
 						listening = false;
 					} catch (IOException e1) {
@@ -170,6 +171,7 @@ public class DistributedTextEditor extends JFrame {
             port = Integer.parseInt(portNumber.getText());
             try {
                 socket = new Socket(ipaddress.getText(), port);
+                er.connect(socket);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -196,6 +198,7 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnect(){
+		er.disConnect();
 		setTitle("Disconnected");
 		area1.setText("");
 		changed = false;

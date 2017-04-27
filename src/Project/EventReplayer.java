@@ -4,6 +4,7 @@ import Project.strategies.EventHandlerStrategy;
 
 import javax.swing.JTextArea;
 import java.awt.*;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -103,5 +104,13 @@ public class EventReplayer implements Runnable {
 				}
 			});
 		}
+	}
+
+	public void connect(Socket socket) {
+		connection = new Connection(socket, this);
+	}
+
+	public void disConnect() {
+		connection.disconnect();
 	}
 }
