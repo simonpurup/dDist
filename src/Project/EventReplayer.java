@@ -5,6 +5,7 @@ import Project.strategies.EventHandlerStrategy;
 import javax.swing.JTextArea;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  *
@@ -23,6 +24,7 @@ public class EventReplayer implements Runnable {
 	private JTextArea area;
 	private Connection connection;
 	private ArrayList<LoggedEvent> eventLog;
+	private static final long saveTime = 10^10;
 
 	public EventReplayer(DocumentEventCapturer dec, JTextArea area, DistributedTextEditor dte) {
 		this.dec = dec;
@@ -47,9 +49,13 @@ public class EventReplayer implements Runnable {
 				MyTextEvent mte = dec.take();
 				//If event was not recieved it must be a local event.
 				if(!isRecievedEvent(mte)){
-					eventLog.add(new LoggedEvent(mte,dte.getVectorClock(), System.nanoTime()));
-					dte.getVectorClock().put(dte.)
-					Connection.send();
+					HashMap<String, Integer> vectorClock = dte.getVectorClock();
+					eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
+					while(System.nanoTime() - eventLog.get(0).time > saveTime){
+						eventLog.remove(0);
+					}
+					vectorClock.put(dte.getLocalAddress(),vectorClock.get(dte.getLocalAddress()) +1);
+					connection.send(new EventMessage(vectorClock, mte));
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

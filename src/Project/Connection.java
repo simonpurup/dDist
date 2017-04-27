@@ -61,4 +61,18 @@ public class Connection implements Runnable {
             }
         }
     }
+
+    public  void send(EventMessage message) {
+        try {
+            outStream.writeObject(message);
+        } catch (IOException e) {
+            if(e instanceof SocketException && (e.getMessage().equals("Socket closed")
+                    || e.getMessage().equals("Broken pipe (Write failed)"))){
+                //If the connection has been closed, then do nothing. The closing of
+                //sockets is handled elsewhere.
+            } else {
+                e.printStackTrace();
+            }
+        }
+    }
 }

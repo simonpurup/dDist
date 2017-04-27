@@ -32,6 +32,11 @@ public class DistributedTextEditor extends JFrame {
     private int port = 80;
     private ServerSocket serverSocket = null;
     private Socket socket;
+
+	public String getLocalAddress() {
+		return localAddress;
+	}
+
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
 	private final DistributedTextEditor dte = this;
 
