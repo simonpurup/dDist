@@ -14,5 +14,18 @@ public class TextInsertEvent extends MyTextEvent {
 		this.text = text;
 	}
 	public String getText() { return text; }
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof TextInsertEvent) {
+			TextInsertEvent event = (TextInsertEvent) obj;
+			if(event.getOffset() == getOffset() && event.getText().equals(getText()))
+				return true;
+			else
+				return false;
+		}
+		else
+			return false;
+	}
 }
 

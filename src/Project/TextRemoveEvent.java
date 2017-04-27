@@ -10,4 +10,17 @@ public class TextRemoveEvent extends MyTextEvent {
 	}
 	
 	public int getLength() { return length; }
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof TextRemoveEvent) {
+			TextRemoveEvent event = (TextRemoveEvent) obj;
+			if(event.getOffset() == getOffset() && event.getLength() == getLength())
+				return true;
+			else
+				return false;
+		}
+		else
+			return false;
+	}
 }
