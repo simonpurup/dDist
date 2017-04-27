@@ -64,6 +64,12 @@ public class EventReplayer implements Runnable {
 	}
 
 	public void handleMessage(EventMessage message){
+		MyTextEvent mte = message.getTextEvent();
+		HashMap<String, Integer> vectorClock = dte.getVectorClock();
+
+		addRecievedEvent(mte);
+		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
+
 		printMessage(message.getTextEvent());
 	}
 
