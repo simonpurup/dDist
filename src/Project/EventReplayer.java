@@ -17,17 +17,19 @@ import java.util.ArrayList;
  */
 public class EventReplayer implements Runnable {
 
+	private final DistributedTextEditor dte;
 	private ArrayList<MyTextEvent> recievedEvents;
 	private DocumentEventCapturer dec;
 	private JTextArea area;
-	private EventHandlerStrategy strategy;
 	private Connection connection;
+	private ArrayList<LoggedEvent> eventLog;
 
 	public EventReplayer(DocumentEventCapturer dec, JTextArea area, DistributedTextEditor dte) {
 		this.dec = dec;
 		this.area = area;
-		this.strategy = strategy;
 		recievedEvents = new ArrayList<MyTextEvent>();
+		eventLog = new ArrayList<LoggedEvent>();
+		this.dte = dte;
 	}
 
 	public synchronized  void addRecievedEvent(MyTextEvent e){
@@ -35,19 +37,20 @@ public class EventReplayer implements Runnable {
 	}
 
 	public synchronized  boolean isRecievedEvent(MyTextEvent e){
-		if(recievedEvents.contains(e)){
-			recievedEvents.remove(e);
-			return true;
-		}
-		else return false;
+		return recievedEvents.remove(e);
 	}
 
 	public void run() {
 		boolean wasInterrupted = false;
 		while (!wasInterrupted) {
 			try {
-				MyTextEvent event = dec.take();
-				strategy.handleEvent(event);
+				MyTextEvent mte = dec.take();
+				//If event was not recieved it must be a local event.
+				if(!isRecievedEvent(mte)){
+					eventLog.add(new LoggedEvent(mte,dte.getVectorClock(), System.nanoTime()));
+					dte.getVectorClock().put(dte.)
+					Connection.send();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.HashMap;
 import javax.swing.*;
 import javax.swing.text.*;
 
@@ -33,6 +34,16 @@ public class DistributedTextEditor extends JFrame {
     private Socket socket;
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
 	private final DistributedTextEditor dte = this;
+
+	public HashMap<String, Integer> getVectorClock() {
+		return vectorClock;
+	}
+
+	public void setVectorClock(HashMap<String, Integer> vectorClock) {
+		this.vectorClock = vectorClock;
+	}
+
+	private HashMap<String, Integer> vectorClock;
     
     public DistributedTextEditor() {
 		try {
@@ -45,6 +56,9 @@ public class DistributedTextEditor extends JFrame {
 			e.printStackTrace();
 			e.printStackTrace();
 		}
+
+		vectorClock = new HashMap<String, Integer>();
+		vectorClock.put(localAddress, 0);
 
 		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -242,4 +256,6 @@ public class DistributedTextEditor extends JFrame {
     public static void main(String[] arg) {
     	new DistributedTextEditor();
     }
+
+
 }
