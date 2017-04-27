@@ -41,6 +41,8 @@ public class DocumentEventCapturer extends DocumentFilter {
 	public void insertString(FilterBypass fb, int offset, String str, AttributeSet a)
 			throws BadLocationException {
 	/* Queue a copy of the event and then modify the textarea */
+		if(str == null)
+			System.out.println("I got null in construction");
 		eventHistory.add(new TextInsertEvent(offset, str));
 		super.insertString(fb, offset, str, a);
 	}
