@@ -5,6 +5,8 @@ import Project.strategies.EventHandlerStrategy;
 import javax.swing.JTextArea;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -30,6 +32,7 @@ public class EventReplayer implements Runnable {
 		recievedEvents = new ArrayList<MyTextEvent>();
 		eventLog = new ArrayList<LoggedEvent>();
 		this.dte = dte;
+		this.connection = new Connection(dte.getSocket(), this);
 	}
 
 	public synchronized  void addRecievedEvent(MyTextEvent e){
@@ -48,8 +51,11 @@ public class EventReplayer implements Runnable {
 				//If event was not recieved it must be a local event.
 				if(!isRecievedEvent(mte)){
 					eventLog.add(new LoggedEvent(mte,dte.getVectorClock(), System.nanoTime()));
-					dte.getVectorClock().put(dte.)
-					Connection.send();
+					String localAdress = dte.getLocalAddress();
+					HashMap<String, Integer> vectorClock = dte.getVectorClock();
+					int count = vectorClock.get(localAdress) != 0 ? vectorClock.get(localAdress) + 1 : 1;
+					vectorClock.put(localAdress, count);
+					connection.send(new EventMessage(vectorClock, mte));
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

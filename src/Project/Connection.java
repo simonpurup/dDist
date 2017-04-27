@@ -61,4 +61,13 @@ public class Connection implements Runnable {
             }
         }
     }
+
+    public void send(EventMessage message) {
+        try {
+            outStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
