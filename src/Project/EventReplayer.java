@@ -50,7 +50,7 @@ public class EventReplayer implements Runnable {
 				MyTextEvent mte = dec.take();
 				//If event was not recieved it must be a local event.
 				if(!isRecievedEvent(mte)){
-					if(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null) {
+					if(!(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null)) {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
 						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime()));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
