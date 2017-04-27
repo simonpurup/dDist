@@ -52,7 +52,7 @@ public class EventReplayer implements Runnable {
 				if(!isRecievedEvent(mte)){
 					HashMap<String, Integer> vectorClock = dte.getVectorClock();
 					eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
-					while(eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime){
+					while(eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time < saveTime){
 						eventLog.remove(0);
 					}
 					vectorClock.put(dte.getLocalAddress(),vectorClock.get(dte.getLocalAddress()) +1);
@@ -68,6 +68,11 @@ public class EventReplayer implements Runnable {
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
+		if(mte instanceof  TextInsertEvent){
+			if(((TextInsertEvent) mte).getText() == null){
+				System.out.println("Got null");
+			}
+		}
 		addRecievedEvent(mte);
 		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
 
