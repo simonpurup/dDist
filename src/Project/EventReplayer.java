@@ -1,8 +1,5 @@
 package Project;
 
-import Project.strategies.EventHandlerStrategy;
-import org.junit.jupiter.api.Test;
-
 import javax.swing.JTextArea;
 import java.awt.*;
 import java.net.Socket;
@@ -72,7 +69,6 @@ public class EventReplayer implements Runnable {
 		}
 	}
 
-	@Test
 	public void handleMessage(EventMessage message, String sender){
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
@@ -167,6 +163,55 @@ public class EventReplayer implements Runnable {
 				}
 			});
 		}
+	}
+
+	private MyTextEvent rearangeTextEvent(MyTextEvent A, MyTextEvent B){
+		MyTextEvent new_event = null;
+		if(A instanceof TextInsertEvent){
+			if(B instanceof TextInsertEvent){
+				TextInsertEvent B_tie = (TextInsertEvent) B;
+				if(B.getOffset() < A.getOffset())
+					return B;
+				else {
+					int offset = B.getOffset()+((TextInsertEvent) A).getText().length();
+					new_event = new TextInsertEvent(offset,B_tie.getText());
+				}
+			} else{
+				if(B.getOffset() >= A.getOffset()){
+					int offset = B.getOffset()+((TextInsertEvent) A).getText().length();
+					new_event = new TextRemoveEvent(offset,((TextRemoveEvent) B).getLength());
+				}
+				else if(B.getOffset()+((TextRemoveEvent) B).getLength() >= A.getOffset()){
+
+				}
+				else
+					return B;
+			}
+		} else{
+			if(B instanceof TextInsertEvent){
+				if(B.getOffset() >= A.getOffset()){
+					if(B.getOffset() >= A.getOffset()+((TextRemoveEvent) A).getLength()){
+						int offset = B.getOffset()-((TextRemoveEvent) A).getLength();
+						new_event = new TextInsertEvent(offset,((TextInsertEvent) B).getText());
+					} else{
+						new_event = new TextInsertEvent(A.getOffset(),((TextInsertEvent) B).getText());
+					}
+				} else
+					return B;
+			} else{
+				if(B.getOffset() >= A.getOffset()){
+					if(B.getOffset() >= A.getOffset()+((TextRemoveEvent) A).getLength()) {
+						int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
+						new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
+					} else{
+						if(B.getOffset()+((TextRemoveEvent) B).getLength()>=A.getOffset()+((TextRemoveEvent) A).getLength()){
+							new_event = new TextRemoveEvent(A.getOffset(),((TextRemoveEvent) A).getLength());
+						}
+					}
+				}
+			}
+		}
+		return new_event;
 	}
 
 	public void connect(Socket socket) {
