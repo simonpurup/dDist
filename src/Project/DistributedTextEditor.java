@@ -36,6 +36,7 @@ public class DistributedTextEditor extends JFrame {
     private int port = 80;
     private ServerSocket serverSocket = null;
     private Socket socket;
+    public  int priority = 0;
 
 
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
@@ -162,6 +163,7 @@ public class DistributedTextEditor extends JFrame {
 					localAddress = socket.getLocalSocketAddress().toString();
 					vectorClock.put(localAddress, 0);
 					vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
+					priority = 0;
 					listening = false;
 				} catch (IOException e1) {
 					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
@@ -198,6 +200,7 @@ public class DistributedTextEditor extends JFrame {
 			localAddress = socket.getLocalSocketAddress().toString();
 			vectorClock.put(localAddress, 0);
 			vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
+			priority = 1;
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

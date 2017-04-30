@@ -32,8 +32,20 @@ public class MyTest1 {
     public void test1(){
         assertEquals(Math.toIntExact(dte1.getVectorClock().get(dte1.getLocalAddress())),0);
         addTextInsert("a",0,dte1.getArea1());
-        try {Thread.sleep(10);} catch (InterruptedException e) {}
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
         assertEquals(Math.toIntExact(dte1.getVectorClock().get(dte1.getLocalAddress())),1);
+        assertEquals(Math.toIntExact(dte2.getVectorClock().get(dte1.getLocalAddress())),1);
+        assertEquals(Math.toIntExact(dte2.getVectorClock().get(dte2.getLocalAddress())),0);
+        assertEquals(dte2.getArea1().getText(), "a" );
+    }
+
+    @Test
+    public void test2(){
+        addTextInsert("a",0,dte1.getArea1());
+        addTextInsert("b",0,dte2.getArea1());
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea1().getText(), "ab" );
+        assertEquals(dte1.getArea1().getText(), "ab" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){

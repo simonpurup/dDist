@@ -39,7 +39,7 @@ public class Connection implements Runnable {
         while (running) {
             try {
                 EventMessage message = (EventMessage) inputStream.readObject();
-                er.handleMessage(message);
+                er.handleMessage(message, socket.getRemoteSocketAddress().toString());
 
             } catch (IOException e) {
                 if (e instanceof EOFException) {

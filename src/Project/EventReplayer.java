@@ -57,7 +57,7 @@ public class EventReplayer implements Runnable {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
 						if(vectorClock.get(dte.getLocalAddress()) != null)
 						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
-						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime()));
+						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
 							eventLog.remove(0);
 						}
@@ -73,12 +73,16 @@ public class EventReplayer implements Runnable {
 	}
 
 	@Test
-	public void handleMessage(EventMessage message){
+	public void handleMessage(EventMessage message, String sender){
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
 		addRecievedEvent(mte);
-		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
+		//Only works with 2 clients
+		int priority = 0;
+		if(dte.priority == 0)
+			priority = 1;
+		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 
 		System.out.println("Message");
 		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
