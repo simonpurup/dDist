@@ -7,6 +7,8 @@ import java.awt.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -52,11 +54,12 @@ public class EventReplayer implements Runnable {
 				if(!isRecievedEvent(mte)){
 					if(!(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null)) {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
+						if(vectorClock.get(dte.getLocalAddress()) != null)
+						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
 						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime()));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
 							eventLog.remove(0);
 						}
-						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
 						if (connection != null) connection.send(new EventMessage(vectorClock, mte));
 					}
 				}
@@ -73,7 +76,33 @@ public class EventReplayer implements Runnable {
 		addRecievedEvent(mte);
 		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime()));
 
+		System.out.println("Message");
+		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
+		System.out.println("Local");
+		printMap((HashMap<String,Integer>)vectorClock.clone());
+
+		Iterator it = message.getVectorClock().entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry)it.next();
+			if(pair.getKey().equals(dte.getLocalAddress()))
+			{}
+			else if(vectorClock.get(pair.getKey()) <(int)pair.getValue()){
+				vectorClock.put((String)pair.getKey(),(int)pair.getValue());
+			}
+			it.remove(); // avoids a ConcurrentModificationException
+		}
+
+
 		printMessage(message.getTextEvent());
+	}
+
+	public static void printMap(Map mp) {
+		Iterator it = mp.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry pair = (Map.Entry)it.next();
+			System.out.println(pair.getKey() + " = " + pair.getValue());
+			it.remove(); // avoids a ConcurrentModificationException
+		}
 	}
 
 	public void printMessage(MyTextEvent mte) {

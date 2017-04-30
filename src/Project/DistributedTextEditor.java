@@ -60,7 +60,6 @@ public class DistributedTextEditor extends JFrame {
 		}
 
 		vectorClock = new HashMap<String, Integer>();
-		vectorClock.put(localAddress, 0);
 
 		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -143,6 +142,9 @@ public class DistributedTextEditor extends JFrame {
 						socket = serverSocket.accept();
 						er.connect(socket);
 						serverSocket.close();
+						localAddress = socket.getLocalSocketAddress().toString();
+						vectorClock.put(localAddress, 0);
+						vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
 						listening = false;
 					} catch (IOException e1) {
 						if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
@@ -172,6 +174,9 @@ public class DistributedTextEditor extends JFrame {
             try {
                 socket = new Socket(ipaddress.getText(), port);
                 er.connect(socket);
+				localAddress = socket.getLocalSocketAddress().toString();
+				vectorClock.put(localAddress, 0);
+                vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
