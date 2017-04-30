@@ -90,9 +90,10 @@ public class EventReplayer implements Runnable {
 		printMap((HashMap<String,Integer>)vectorClock.clone());
 
 
-		//If local(V[me]) ==
+		//If local(V[me]) == Message(V[me]) && message(V[him]) > local(V[him]) update
+		if(message.getVectorClock().get(dte.getLocalAddress()) > )
 
-		//Syncs vector-clock
+		//Syncs vector-clocks
 		Iterator it = message.getVectorClock().entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry) it.next();
