@@ -14,7 +14,11 @@ import javax.swing.text.*;
 
 public class DistributedTextEditor extends JFrame {
 
-    private JTextArea area1 = new JTextArea(20,120);
+	public JTextArea getArea1() {
+		return area1;
+	}
+
+	private JTextArea area1 = new JTextArea(20,120);
     private JTextField ipaddress = new JTextField("IP address here");     
     private JTextField portNumber = new JTextField("Port number here");     
     
@@ -124,68 +128,84 @@ public class DistributedTextEditor extends JFrame {
 
     Action Listen = new AbstractAction("Listen") {
 	    public void actionPerformed(ActionEvent e) {
-	    	saveOld();
-	    	area1.setText("");
-			port = Integer.parseInt(portNumber.getText());
-			setTitle("I'm listening on " + localAddress +":"+port);
-			area1.setEditable(false);
-			listening = true;
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						serverSocket = new ServerSocket(port);
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-					try {
-						socket = serverSocket.accept();
-						er.connect(socket);
-						serverSocket.close();
-						localAddress = socket.getLocalSocketAddress().toString();
-						vectorClock.put(localAddress, 0);
-						vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
-						listening = false;
-					} catch (IOException e1) {
-						if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
-							if(listening)
-							e1.printStackTrace();
-					}
-					if(socket != null) {
-						setTitle("Connected to " + socket.getRemoteSocketAddress());
-					} else{
-						setTitle("Disconnected");
-					}
-					area1.setEditable(true);
-					changed = false;
-					Save.setEnabled(false);
-					SaveAs.setEnabled(false);
-				}
-			}).start();
+	    	listen();
 	    }
 	};
 
-    Action Connect = new AbstractAction("Connect") {
+	public void setIpaddress(String ipaddress) {
+		this.ipaddress.setText(ipaddress);
+	}
+
+	public void setPortNumber(String portNumber) {
+		this.portNumber.setText(portNumber);
+	}
+
+	public void listen() {
+		saveOld();
+		area1.setText("");
+		port = Integer.parseInt(portNumber.getText());
+		setTitle("I'm listening on " + localAddress +":"+port);
+		area1.setEditable(false);
+		listening = true;
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					serverSocket = new ServerSocket(port);
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+				try {
+					socket = serverSocket.accept();
+					er.connect(socket);
+					serverSocket.close();
+					localAddress = socket.getLocalSocketAddress().toString();
+					vectorClock.put(localAddress, 0);
+					vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
+					listening = false;
+				} catch (IOException e1) {
+					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
+						if(listening)
+							e1.printStackTrace();
+				}
+				if(socket != null) {
+					setTitle("Connected to " + socket.getRemoteSocketAddress());
+				} else{
+					setTitle("Disconnected");
+				}
+				area1.setEditable(true);
+				changed = false;
+				Save.setEnabled(false);
+				SaveAs.setEnabled(false);
+			}
+		}).start();
+	}
+
+	Action Connect = new AbstractAction("Connect") {
 	    public void actionPerformed(ActionEvent e) {
-	    	saveOld();
-	    	area1.setText("");
-	    	setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
-            port = Integer.parseInt(portNumber.getText());
-            try {
-                socket = new Socket(ipaddress.getText(), port);
-                er.connect(socket);
-				localAddress = socket.getLocalSocketAddress().toString();
-				vectorClock.put(localAddress, 0);
-                vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            setTitle("Connected to " + socket.getRemoteSocketAddress());
-            changed = false;
-	    	Save.setEnabled(false);
-	    	SaveAs.setEnabled(false);
+	    	connect();
 	    }
 	};
+
+    public void connect(){
+		saveOld();
+		area1.setText("");
+		setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
+		port = Integer.parseInt(portNumber.getText());
+		try {
+			socket = new Socket(ipaddress.getText(), port);
+			er.connect(socket);
+			localAddress = socket.getLocalSocketAddress().toString();
+			vectorClock.put(localAddress, 0);
+			vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		setTitle("Connected to " + socket.getRemoteSocketAddress());
+		changed = false;
+		Save.setEnabled(false);
+		SaveAs.setEnabled(false);
+	}
 
     Action Disconnect = new AbstractAction("Disconnect") {
 	    public void actionPerformed(ActionEvent e) {

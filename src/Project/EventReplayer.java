@@ -1,6 +1,7 @@
 package Project;
 
 import Project.strategies.EventHandlerStrategy;
+import org.junit.jupiter.api.Test;
 
 import javax.swing.JTextArea;
 import java.awt.*;
@@ -60,7 +61,9 @@ public class EventReplayer implements Runnable {
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
 							eventLog.remove(0);
 						}
-						if (connection != null) connection.send(new EventMessage(vectorClock, mte));
+						if (connection != null){
+							connection.send(new EventMessage((HashMap<String,Integer>)vectorClock.clone(), mte));
+						}
 					}
 				}
 			} catch (InterruptedException e) {
@@ -69,6 +72,7 @@ public class EventReplayer implements Runnable {
 		}
 	}
 
+	@Test
 	public void handleMessage(EventMessage message){
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
