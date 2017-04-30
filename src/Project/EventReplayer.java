@@ -182,7 +182,7 @@ public class EventReplayer implements Runnable {
 					new_event = new TextRemoveEvent(offset,((TextRemoveEvent) B).getLength());
 				}
 				else if(B.getOffset()+((TextRemoveEvent) B).getLength() >= A.getOffset()){
-
+					//TODO: Add split TextRemoveEvent
 				}
 				else
 					return B;
@@ -205,10 +205,13 @@ public class EventReplayer implements Runnable {
 						new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
 					} else{
 						if(B.getOffset()+((TextRemoveEvent) B).getLength()>=A.getOffset()+((TextRemoveEvent) A).getLength()){
-							new_event = new TextRemoveEvent(A.getOffset(),((TextRemoveEvent) A).getLength());
-						}
+							int length = B.getOffset()+((TextRemoveEvent) B).getLength()-A.getOffset()-((TextRemoveEvent) A).getLength();
+							new_event = new TextRemoveEvent(A.getOffset(),length);
+						} else
+							return null;
 					}
-				}
+				} else
+					return B;
 			}
 		}
 		return new_event;
