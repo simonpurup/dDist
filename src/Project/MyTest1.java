@@ -3,6 +3,7 @@ package Project;
  * Created by lærerPC on 30-04-2017.
  */
 
+import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +47,28 @@ public class MyTest1 {
         try {Thread.sleep(100);} catch (InterruptedException e) {}
         assertEquals(dte2.getArea1().getText(), "ab" );
         assertEquals(dte1.getArea1().getText(), "ab" );
+    }
+
+    @Test
+    public void test3(){
+        addTextInsert("a",0,dte1.getArea1());
+        addTextInsert("b",0,dte1.getArea1());
+        addTextInsert("c",0,dte2.getArea1());
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea1().getText(), "abc" );
+        assertEquals(dte1.getArea1().getText(), "abc" );
+    }
+
+    @Test
+    public void test4(){
+        addTextInsert("b",0,dte2.getArea1());
+        addTextInsert("a",0,dte1.getArea1());
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        addTextInsert("d",0,dte2.getArea1());
+        addTextInsert("c",0,dte1.getArea1());
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea1().getText(), "abcd" );
+        assertEquals(dte1.getArea1().getText(), "abcd" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){

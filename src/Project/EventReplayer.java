@@ -82,7 +82,6 @@ public class EventReplayer implements Runnable {
 		int priority = 0;
 		if(dte.priority == 0)
 			priority = 1;
-		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 
 		System.out.println("Message");
 		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
@@ -103,7 +102,16 @@ public class EventReplayer implements Runnable {
 			//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
 			//then print
 			else{
-
+				ArrayList<LoggedEvent> before = new ArrayList<LoggedEvent>();
+				for(int i = eventLog.size() - 1; i >= 0; i--){
+					LoggedEvent e = eventLog.get(i);
+					if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
+						before.add(e);
+					}
+				}
+				for(LoggedEvent e : before){
+					//Undo the event
+				}
 			}
 		}
 
@@ -116,6 +124,8 @@ public class EventReplayer implements Runnable {
 				vectorClock.put((String) pair.getKey(), (int) pair.getValue());
 			}
 		}
+
+		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 	}
 
 	public static void printMap(Map mp) {
