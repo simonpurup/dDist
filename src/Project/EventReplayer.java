@@ -89,7 +89,6 @@ public class EventReplayer implements Runnable {
 			else if(vectorClock.get(pair.getKey()) <(int)pair.getValue()){
 				vectorClock.put((String)pair.getKey(),(int)pair.getValue());
 			}
-			it.remove(); // avoids a ConcurrentModificationException
 		}
 
 
