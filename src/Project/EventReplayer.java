@@ -89,18 +89,18 @@ public class EventReplayer implements Runnable {
 		System.out.println("Local");
 		printMap((HashMap<String,Integer>)vectorClock.clone());
 
+
+		//If local(V[me]) ==
+
+		//Syncs vector-clock
 		Iterator it = message.getVectorClock().entrySet().iterator();
 		while (it.hasNext()) {
-			Map.Entry pair = (Map.Entry)it.next();
-			if(pair.getKey().equals(dte.getLocalAddress()))
-			{}
-			else if(vectorClock.get(pair.getKey()) <(int)pair.getValue()){
-				vectorClock.put((String)pair.getKey(),(int)pair.getValue());
+			Map.Entry pair = (Map.Entry) it.next();
+			if (pair.getKey().equals(dte.getLocalAddress())) {
+			} else if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
+				vectorClock.put((String) pair.getKey(), (int) pair.getValue());
 			}
 		}
-
-
-		printMessage(message.getTextEvent());
 	}
 
 	public static void printMap(Map mp) {
