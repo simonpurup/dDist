@@ -22,8 +22,8 @@ public class EventReplayer implements Runnable {
 	public EventReplayer(DocumentEventCapturer dec, JTextArea area, DistributedTextEditor dte) {
 		this.dec = dec;
 		this.area = area;
-		receivedEvents = new ArrayList<MyTextEvent>();
-		eventLog = new ArrayList<LoggedEvent>();
+		receivedEvents = new ArrayList<>();
+		eventLog = new ArrayList<>();
 		this.dte = dte;
 	}
 
@@ -67,14 +67,16 @@ public class EventReplayer implements Runnable {
 		if(dte.priority == 0)
 			priority = 1;
 
+		//For debugging
 		System.out.println("Message");
 		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
 		System.out.println("Local");
 		printMap((HashMap<String,Integer>)vectorClock.clone());
 
 
-		//If local(V[me]) == Message(V[me]) update
-		if(message.getVectorClock().get(dte.getLocalAddress()) == vectorClock.get(dte.getLocalAddress())){
+		//If the timestamp of the message corresponding to this process is equal to the actual clock, update
+		//local(V[me]) == Message(V[me]) update
+		if(message.getVectorClock().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
 			printMessage(message.getTextEvent());
 		}
 		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
@@ -86,15 +88,16 @@ public class EventReplayer implements Runnable {
 			//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
 			//then print
 			else{
-				ArrayList<LoggedEvent> before = new ArrayList<LoggedEvent>();
+				ArrayList<MyTextEvent> before = new ArrayList<>();
 				for(int i = eventLog.size() - 1; i >= 0; i--){
 					LoggedEvent e = eventLog.get(i);
 					if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
-						before.add(e);
+						before.add(e.mte);
 					}
 				}
-				for(LoggedEvent e : before){
-					//Undo the event
+				LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
+				for(MyTextEvent e : eventsToPerform){
+					printMessage(e);
 				}
 			}
 		}
@@ -109,7 +112,7 @@ public class EventReplayer implements Runnable {
 			}
 		}
 
-		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
+		//eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 	}
 
 	private static void printMap(Map mp) {

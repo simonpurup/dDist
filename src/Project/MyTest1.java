@@ -3,7 +3,8 @@ package Project;
  * Created by lærerPC on 30-04-2017.
  */
 
-import org.junit.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,15 +16,15 @@ public class MyTest1 {
     DistributedTextEditor dte1;
     DistributedTextEditor dte2;
 
-    @Before
+    @BeforeEach
     public void init(){
         dte1 = new DistributedTextEditor();
         dte2 = new DistributedTextEditor();
-        dte1.setPortNumber("23");
+        dte1.setPortNumber("40499");
         dte1.listen();
         try {Thread.sleep(200);} catch (InterruptedException e) {}
-        dte2.setPortNumber("23");
-        dte2.setIpaddress("127.0.0.1");
+        dte2.setPortNumber("40499");
+        dte2.setIpaddress("127.0.1.1");
         dte2.connect();
     }
 
