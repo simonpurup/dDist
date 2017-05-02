@@ -18,7 +18,7 @@ public class DistributedTextEditor extends JFrame {
 		return area1;
 	}
 
-	private JTextArea area1 = new JTextArea(20,120);
+	private JTextArea area1 = new JTextArea(50,120);
     private JTextField ipaddress = new JTextField("IP address here");     
     private JTextField portNumber = new JTextField("Port number here");     
     
@@ -121,10 +121,20 @@ public class DistributedTextEditor extends JFrame {
 
     private KeyListener k1 = new KeyAdapter() {
 	    public void keyPressed(KeyEvent e) {
-		changed = true;
-		Save.setEnabled(true);
-		SaveAs.setEnabled(true);
+			changed = true;
+			Save.setEnabled(true);
+			SaveAs.setEnabled(true);
 	    }
+	};
+
+	private KeyListener k2 = new KeyAdapter() {
+		@Override
+		public void keyTyped(KeyEvent e) {
+			char c = e.getKeyChar();
+			if (!Character.isDigit(c)) {
+				e.consume(); // Stop the event from propagating.
+			}
+		}
 	};
 
     Action Listen = new AbstractAction("Listen") {
@@ -289,16 +299,8 @@ public class DistributedTextEditor extends JFrame {
 	public String getLocalAddress() {
 		return localAddress;
 	}
-
-	public Socket getSocket() {
-		return socket;
-	}
-
-
     
     public static void main(String[] arg) {
     	new DistributedTextEditor();
     }
-
-
 }

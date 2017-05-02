@@ -3,24 +3,16 @@ package Project;
 import javax.swing.JTextArea;
 import java.awt.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
-/**
- *
- * Takes the event recorded by the DocumentEventCapturer and replays
- * them in a JTextArea. The delay of 1 sec is only to make the individual
- * steps in the reply visible to humans.
- *
- * @author Jesper Buus Nielsen
- *
+/** The responsibility of this class is to take text events from the <code>DocumentEventCapturer</code>,
+ * decide what to do with them, and do it. It also handles text events received from connected peers.
+ * @author Hold 8
  */
 public class EventReplayer implements Runnable {
 
 	private final DistributedTextEditor dte;
-	private ArrayList<MyTextEvent> recievedEvents;
+	private ArrayList<MyTextEvent> receivedEvents;
 	private DocumentEventCapturer dec;
 	private JTextArea area;
 	private Connection connection;
@@ -30,26 +22,22 @@ public class EventReplayer implements Runnable {
 	public EventReplayer(DocumentEventCapturer dec, JTextArea area, DistributedTextEditor dte) {
 		this.dec = dec;
 		this.area = area;
-		recievedEvents = new ArrayList<MyTextEvent>();
+		receivedEvents = new ArrayList<MyTextEvent>();
 		eventLog = new ArrayList<LoggedEvent>();
 		this.dte = dte;
 	}
 
-	public synchronized  void addRecievedEvent(MyTextEvent e){
-		recievedEvents.add(e);
-	}
-
-	public synchronized  boolean isRecievedEvent(MyTextEvent e){
-		return recievedEvents.remove(e);
-	}
-
+	/** The run method takes events from the DocumentEventCapturer and determines if they are local
+	 * events or received event. If it is not a received event, it adds the event to the eventLog and
+	 * then sends it as a message to the other peers.
+	 */
 	public void run() {
 		boolean wasInterrupted = false;
 		while (!wasInterrupted) {
 			try {
 				MyTextEvent mte = dec.take();
-				//If event was not recieved it must be a local event.
-				if(!isRecievedEvent(mte)){
+				//If event was not received it must be a local event.
+				if(!isReceivedEvent(mte)){
 					if(!(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null)) {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
 						if(vectorClock.get(dte.getLocalAddress()) != null)
@@ -73,7 +61,7 @@ public class EventReplayer implements Runnable {
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
-		addRecievedEvent(mte);
+		addReceivedEvent(mte);
 		//Only works with 2 clients
 		int priority = 0;
 		if(dte.priority == 0)
@@ -124,7 +112,7 @@ public class EventReplayer implements Runnable {
 		eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 	}
 
-	public static void printMap(Map mp) {
+	private static void printMap(Map mp) {
 		Iterator it = mp.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry pair = (Map.Entry)it.next();
@@ -133,7 +121,88 @@ public class EventReplayer implements Runnable {
 		}
 	}
 
-	public void printMessage(MyTextEvent mte) {
+	/** Rearranges the order of the events provided, such that the provided text event is transformed into
+	 * a resulting (possible set of) text event(s) that updates the current text as if e happened before
+	 * the provided list of events. It is important that <param>eventsToUndo</param> is ordered in accordance
+	 * with the order that the events were performed (latest event first, then the second latest and so on).
+	 * @param eventsToUndo Ordered list of event to undo, latest first
+	 * @param e The event to be performed before the events in <param>eventsToUndo</param>
+     * @return List of events to be performed inorder to carry out the change of the text event <param>e</param>.
+	 * The list is ordered such that pullFirst() will give the event that is to be carried out first.
+     */
+	private LinkedList<MyTextEvent> rearrangeTextEvent(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
+		LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
+		eventsToPerform.add(e);
+		for(MyTextEvent A : eventsToUndo) {
+			MyTextEvent B = eventsToPerform.pollFirst();
+			while(B != null) {
+				MyTextEvent new_event = null;
+				if (A instanceof TextInsertEvent) {
+					if (B instanceof TextInsertEvent) {
+						TextInsertEvent B_tie = (TextInsertEvent) B;
+						if (B.getOffset() < A.getOffset())
+							new_event = B;
+						else {
+							int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
+							new_event = new TextInsertEvent(offset, B_tie.getText());
+						}
+					} else {
+						if (B.getOffset() >= A.getOffset()) {
+							int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
+							new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
+						} else if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset()) {
+							TextRemoveEvent B1 = new TextRemoveEvent(B.getOffset(),A.getOffset()-B.getOffset());
+							tempList.add(B1);
+							new_event = new TextRemoveEvent(B.getOffset(),((TextRemoveEvent) B).getLength()-B1.getLength());
+						} else
+							new_event = B;
+					}
+				} else {
+					if (B instanceof TextInsertEvent) {
+						if (B.getOffset() >= A.getOffset()) {
+							if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+								int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
+								new_event = new TextInsertEvent(offset, ((TextInsertEvent) B).getText());
+							} else {
+								new_event = new TextInsertEvent(A.getOffset(), ((TextInsertEvent) B).getText());
+							}
+						} else
+							new_event = B;
+					} else {
+						if (B.getOffset() >= A.getOffset()) {
+							if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+								int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
+								new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
+							} else {
+								if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+									int length = B.getOffset() + ((TextRemoveEvent) B).getLength() - A.getOffset() - ((TextRemoveEvent) A).getLength();
+									new_event = new TextRemoveEvent(A.getOffset(), length);
+								} else
+									new_event = null;
+							}
+						} else if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset()) {
+							if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+								int length = ((TextRemoveEvent) B).getLength() - ((TextRemoveEvent) A).getLength();
+								new_event = new TextRemoveEvent(B.getOffset(), length);
+							} else {
+								new_event = new TextRemoveEvent(B.getOffset(), A.getOffset() - B.getOffset());
+							}
+						} else
+							new_event = B;
+					}
+				}
+				tempList.add(new_event);
+				B = eventsToPerform.pollFirst();
+			}
+			eventsToPerform = (LinkedList<MyTextEvent>) tempList.clone();
+		}
+		return eventsToPerform;
+	}
+
+	/** Updates the local text with the change from the provided text event.
+	 * @param mte the event to be performed
+     */
+	private void printMessage(MyTextEvent mte) {
 		if (mte instanceof TextInsertEvent) {
 			final TextInsertEvent tie = (TextInsertEvent)mte;
 			EventQueue.invokeLater(new Runnable() {
@@ -142,9 +211,8 @@ public class EventReplayer implements Runnable {
 						area.insert(tie.getText(), tie.getOffset());
 					} catch (Exception e) {
 						e.printStackTrace();
-				    		/* We catch all exceptions, as an uncaught exception would make the
-				     		* EDT unwind, which is now healthy.
-				     		*/
+						// We catch all exceptions, as an uncaught exception would make the
+						//EDT unwind, which is not healthy.
 					}
 				}
 			});
@@ -156,65 +224,12 @@ public class EventReplayer implements Runnable {
 						area.replaceRange(null, tre.getOffset(), tre.getOffset()+tre.getLength());
 					} catch (Exception e) {
 						e.printStackTrace();
-				                        /* We catch all exceptions, as an uncaught exception would make the
-				                         * EDT unwind, which is not healthy.
-				                         */
+						// We catch all exceptions, as an uncaught exception would make the
+						//EDT unwind, which is not healthy.
 					}
 				}
 			});
 		}
-	}
-
-	private MyTextEvent rearangeTextEvent(MyTextEvent A, MyTextEvent B){
-		MyTextEvent new_event = null;
-		if(A instanceof TextInsertEvent){
-			if(B instanceof TextInsertEvent){
-				TextInsertEvent B_tie = (TextInsertEvent) B;
-				if(B.getOffset() < A.getOffset())
-					return B;
-				else {
-					int offset = B.getOffset()+((TextInsertEvent) A).getText().length();
-					new_event = new TextInsertEvent(offset,B_tie.getText());
-				}
-			} else{
-				if(B.getOffset() >= A.getOffset()){
-					int offset = B.getOffset()+((TextInsertEvent) A).getText().length();
-					new_event = new TextRemoveEvent(offset,((TextRemoveEvent) B).getLength());
-				}
-				else if(B.getOffset()+((TextRemoveEvent) B).getLength() >= A.getOffset()){
-					//TODO: Add split TextRemoveEvent
-				}
-				else
-					return B;
-			}
-		} else{
-			if(B instanceof TextInsertEvent){
-				if(B.getOffset() >= A.getOffset()){
-					if(B.getOffset() >= A.getOffset()+((TextRemoveEvent) A).getLength()){
-						int offset = B.getOffset()-((TextRemoveEvent) A).getLength();
-						new_event = new TextInsertEvent(offset,((TextInsertEvent) B).getText());
-					} else{
-						new_event = new TextInsertEvent(A.getOffset(),((TextInsertEvent) B).getText());
-					}
-				} else
-					return B;
-			} else{
-				if(B.getOffset() >= A.getOffset()){
-					if(B.getOffset() >= A.getOffset()+((TextRemoveEvent) A).getLength()) {
-						int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
-						new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
-					} else{
-						if(B.getOffset()+((TextRemoveEvent) B).getLength()>=A.getOffset()+((TextRemoveEvent) A).getLength()){
-							int length = B.getOffset()+((TextRemoveEvent) B).getLength()-A.getOffset()-((TextRemoveEvent) A).getLength();
-							new_event = new TextRemoveEvent(A.getOffset(),length);
-						} else
-							return null;
-					}
-				} else
-					return B;
-			}
-		}
-		return new_event;
 	}
 
 	public void connect(Socket socket) {
@@ -224,5 +239,13 @@ public class EventReplayer implements Runnable {
 
 	public void disConnect() {
 		connection.disconnect();
+	}
+
+	private synchronized  void addReceivedEvent(MyTextEvent e){
+		receivedEvents.add(e);
+	}
+
+	private synchronized  boolean isReceivedEvent(MyTextEvent e){
+		return receivedEvents.remove(e);
 	}
 }
