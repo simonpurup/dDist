@@ -42,7 +42,7 @@ public class MyTest1 {
     public void testVectorClocks(){
         assertEquals(Math.toIntExact(dte1.getVectorClock().get(dte1.getLocalAddress())),0);
         addTextInsert("a",0,dte1.getArea1());
-        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
         assertEquals(Math.toIntExact(dte1.getVectorClock().get(dte1.getLocalAddress())),1);
         assertEquals(Math.toIntExact(dte2.getVectorClock().get(dte1.getLocalAddress())),1);
         assertEquals(Math.toIntExact(dte2.getVectorClock().get(dte2.getLocalAddress())),0);
@@ -82,6 +82,7 @@ public class MyTest1 {
         addTextInsert("Test text",0,dte1.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         addTextInsert("of ",5,dte1.getArea1());
+        try {Thread.sleep(1);} catch (InterruptedException e) {}
         addTextRemove(0,5,dte2.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         assertEquals(dte2.getArea1().getText(), dte1.getArea1().getText() );
