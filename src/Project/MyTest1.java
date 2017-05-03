@@ -70,7 +70,7 @@ public class MyTest1 {
     @Test
     public void shouldBeText_Testb_texts(){
         addTextInsert("Test text",0,dte1.getArea1());
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        try {Thread.sleep(2000);} catch (InterruptedException e) {}
         addTextInsert("b",4,dte2.getArea1());
         addTextInsert("s",9,dte1.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}

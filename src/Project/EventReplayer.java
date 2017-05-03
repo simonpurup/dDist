@@ -41,7 +41,7 @@ public class EventReplayer implements Runnable {
 					if(!(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null)) {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
 						if(vectorClock.get(dte.getLocalAddress()) != null)
-						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
+							vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
 						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
 							System.out.println("System nanotime: " + System.nanoTime());
@@ -89,32 +89,27 @@ public class EventReplayer implements Runnable {
 
 		//If the timestamp of the message corresponding to this process is equal to the actual clock, update
 		//local(V[me]) == Message(V[me]) update
-		if(message.getVectorClock().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
+		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
+		System.out.println(vectorClock.get(dte.getLocalAddress()));
+		if(priority == 0 || message.getVectorClock().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
 			printMessage(message.getTextEvent());
 		}
-		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
+		//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
+		//then print
 		else{
-			//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
-			if(priority == 0){
-				printMessage(message.getTextEvent());
+			ArrayList<MyTextEvent> before = new ArrayList<>();
+			for(int i = eventLog.size() - 1; i >= 0; i--){
+				LoggedEvent e = eventLog.get(i);
+				if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
+					before.add(e.mte);
+				}
 			}
-			//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
-			//then print
-			else{
-				ArrayList<MyTextEvent> before = new ArrayList<>();
-				for(int i = eventLog.size() - 1; i >= 0; i--){
-					LoggedEvent e = eventLog.get(i);
-					if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
-						before.add(e.mte);
-					}
-				}
-				System.out.println("Yep");
-				LinkedList<MyTextEvent> eventsToPerform = undoTextEvents(before,mte);
-				for(MyTextEvent e : eventsToPerform){
-					addReceivedEvent(e);
-					printMessage(e);
-					receivedEvents.remove(mte);
-				}
+			System.out.println("Yep");
+			LinkedList<MyTextEvent> eventsToPerform = undoTextEvents(before,mte);
+			for(MyTextEvent e : eventsToPerform){
+				addReceivedEvent(e);
+				printMessage(e);
+				receivedEvents.remove(mte);
 			}
 		}
 
@@ -127,7 +122,6 @@ public class EventReplayer implements Runnable {
 				vectorClock.put((String) pair.getKey(), (int) pair.getValue());
 			}
 		}
-		//eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 	}
 
 	private static void printMap(Map mp) {
