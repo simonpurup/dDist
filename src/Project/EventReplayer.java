@@ -59,6 +59,16 @@ public class EventReplayer implements Runnable {
 		}
 	}
 
+	public void disconnect() {
+		connection.disconnect();
+		connection = null;
+	}
+
+	public void disconnectDTE() {
+		connection = null;
+		dte.disconnectClear();
+	}
+
 	public void handleMessage(EventMessage message, String sender){
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
@@ -197,7 +207,7 @@ public class EventReplayer implements Runnable {
 				tempList.add(new_event);
 				B = eventsToPerform.pollFirst();
 			}
-			eventsToPerform = (LinkedList<MyTextEvent>) tempList.clone();
+			eventsToPerform = tempList;
 			tempList = new LinkedList<>();
 		}
 		return eventsToPerform;
