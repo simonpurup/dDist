@@ -65,9 +65,7 @@ public class EventReplayer implements Runnable {
 
 		addReceivedEvent(mte);
 		//Only works with 2 clients
-		int priority = 0;
-		if(dte.priority == 0)
-			priority = 1;
+		int priority = dte.priority;
 
 		//For debugging
 //		System.out.println("Message");
@@ -96,11 +94,11 @@ public class EventReplayer implements Runnable {
 						before.add(e.mte);
 					}
 				}
-				LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
+				LinkedList<MyTextEvent> eventsToPerform = undoTextEvents(before,mte);
 				for(MyTextEvent e : eventsToPerform){
-					receivedEvents.remove(mte);
 					addReceivedEvent(e);
 					printMessage(e);
+					receivedEvents.remove(mte);
 				}
 			}
 		}
@@ -114,7 +112,6 @@ public class EventReplayer implements Runnable {
 				vectorClock.put((String) pair.getKey(), (int) pair.getValue());
 			}
 		}
-
 		//eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
 	}
 
@@ -136,7 +133,7 @@ public class EventReplayer implements Runnable {
      * @return List of events to be performed inorder to carry out the change of the text event <param>e</param>.
 	 * The list is ordered such that pullFirst() will give the event that is to be carried out first.
      */
-	private LinkedList<MyTextEvent> rearrangeTextEvent(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
+	private LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
 		LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
 		eventsToPerform.add(e);
 		for(MyTextEvent A : eventsToUndo) {
@@ -201,6 +198,7 @@ public class EventReplayer implements Runnable {
 				B = eventsToPerform.pollFirst();
 			}
 			eventsToPerform = (LinkedList<MyTextEvent>) tempList.clone();
+			tempList = new LinkedList<>();
 		}
 		return eventsToPerform;
 	}

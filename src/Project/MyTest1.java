@@ -53,9 +53,9 @@ public class MyTest1 {
     public void shouldBeText_ab(){
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        assertEquals(dte2.getArea1().getText(), "ab" );
-        assertEquals(dte1.getArea1().getText(), "ab" );
+        try {Thread.sleep(2000);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea1().getText(), "ba" );
+        assertEquals(dte2.getArea1().getText(), "ba" );
     }
 
     @Test
@@ -64,9 +64,9 @@ public class MyTest1 {
         addTextInsert("b",0,dte2.getArea1());
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
-        try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        assertEquals(dte2.getArea1().getText(), "aabb" );
-        assertEquals(dte1.getArea1().getText(), "aabb" );
+        try {Thread.sleep(2000);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea1().getText(), "bbaa" );
+        assertEquals(dte2.getArea1().getText(), "bbaa" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){
