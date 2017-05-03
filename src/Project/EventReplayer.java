@@ -42,7 +42,8 @@ public class EventReplayer implements Runnable {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
 							if(vectorClock.get(dte.getLocalAddress()) != null)
 						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
-						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority));
+						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority,area));
+						System.out.println("own" + dte.priority);
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
 							eventLog.remove(0);
 						}
@@ -58,6 +59,7 @@ public class EventReplayer implements Runnable {
 	}
 
 	public void handleMessage(EventMessage message, String sender){
+		System.out.println("handled" + dte.priority);
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
@@ -77,25 +79,19 @@ public class EventReplayer implements Runnable {
 		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
 		else{
 			//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
-			if(dte.priority == 0){
+			if(dte.priority == 1){
 				printMessage(message.getTextEvent());
 			}
 			//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
 			//then print
 			else{
-				ArrayList<MyTextEvent> before = new ArrayList<>();
-				for(int i = eventLog.size() - 1; i >= 0; i--){
-					LoggedEvent e = eventLog.get(i);
-					if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
-						before.add(e.mte);
-					}
-				}
-				LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
+				setEventBefore(message);
+				/*LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
 				for(MyTextEvent e : eventsToPerform){
 					receivedEvents.remove(mte);
 					addReceivedEvent(e);
 					printMessage(e);
-				}
+				}*/
 			}
 		}
 
@@ -108,8 +104,25 @@ public class EventReplayer implements Runnable {
 				vectorClock.put((String) pair.getKey(), (int) pair.getValue());
 			}
 		}
+	}
+	public void setEventBefore(EventMessage message){
+		ArrayList<LoggedEvent> before = new ArrayList<LoggedEvent>();
+		for(int i = eventLog.size() - 1; i >= 0; i--){
+			LoggedEvent e = eventLog.get(i);
+			if(e.vectorClock.get(dte.getLocalAddress()) > message.getVectorClock().get(dte.getLocalAddress())){
+				before.add(e);
+			}
+		}
+		for(LoggedEvent e : before){
+			e.undoThis(area, this);
+		}
 
-		//eventLog.add(new LoggedEvent(mte,vectorClock, System.nanoTime(),priority));
+		printMessage(message.getTextEvent());
+		Collections.reverse(before);
+		for(LoggedEvent e : before){
+			printMessage(e.mte);
+			addReceivedEvent(e.mte);
+		}
 	}
 
 	private static void printMap(Map mp) {
@@ -202,7 +215,7 @@ public class EventReplayer implements Runnable {
 	/** Updates the local text with the change from the provided text event.
 	 * @param mte the event to be performed
      */
-	private void printMessage(MyTextEvent mte) {
+	public void printMessage(MyTextEvent mte) {
 		if (mte instanceof TextInsertEvent) {
 			final TextInsertEvent tie = (TextInsertEvent)mte;
 			EventQueue.invokeLater(new Runnable() {
@@ -247,7 +260,7 @@ public class EventReplayer implements Runnable {
 	}
 
 
-	private synchronized  void addReceivedEvent(MyTextEvent e){
+	public synchronized  void addReceivedEvent(MyTextEvent e){
 		receivedEvents.add(e);
 	}
 

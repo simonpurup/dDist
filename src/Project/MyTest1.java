@@ -17,6 +17,7 @@ public class MyTest1 {
 
     DistributedTextEditor dte1;
     DistributedTextEditor dte2;
+    private boolean running = false;
 
     @BeforeEach
     public void init(){
@@ -24,11 +25,11 @@ public class MyTest1 {
         dte2 = new DistributedTextEditor();
         dte1.setPortNumber("40499");
         dte1.listen();
-        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        try {Thread.sleep(500);} catch (InterruptedException e) {}
         dte2.setPortNumber("40499");
         dte2.setIpaddress("127.0.1.1");
         dte2.connect();
-        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        try {Thread.sleep(500);} catch (InterruptedException e) {}
     }
 
 
@@ -65,8 +66,27 @@ public class MyTest1 {
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
+/*        while (!running){
+            try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        }*/
         assertEquals(dte2.getArea1().getText(), "aabb" );
         assertEquals(dte1.getArea1().getText(), "aabb" );
+    }
+
+    @Test
+    public void shouldBeText_bb(){
+        addTextInsert("a",0,dte1.getArea1());
+        addTextInsert("a",0,dte1.getArea1());
+        addTextRemove(0,1, dte1.getArea1());
+        addTextRemove(0,1, dte1.getArea1());
+        addTextInsert("b",0,dte2.getArea1());
+        addTextInsert("b",0,dte2.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        while (!running){
+            try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        }
+        assertEquals(dte2.getArea1().getText(), "bb" );
+        assertEquals(dte1.getArea1().getText(), "bb" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){

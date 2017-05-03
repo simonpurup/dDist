@@ -8,7 +8,7 @@ public class TextRemoveEvent extends MyTextEvent {
 		super(offset);
 		this.length = length;
 	}
-	
+
 	public int getLength() { return length; }
 
 	@Override
