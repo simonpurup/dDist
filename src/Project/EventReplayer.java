@@ -98,6 +98,7 @@ public class EventReplayer implements Runnable {
 				}
 				LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
 				for(MyTextEvent e : eventsToPerform){
+					receivedEvents.remove(mte);
 					addReceivedEvent(e);
 					printMessage(e);
 				}

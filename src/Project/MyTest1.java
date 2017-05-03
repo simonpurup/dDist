@@ -4,6 +4,7 @@ package Project;
  */
 
 import Project.DistributedTextEditor;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +31,15 @@ public class MyTest1 {
         try {Thread.sleep(100);} catch (InterruptedException e) {}
     }
 
+
+    @AfterEach
+    public void destructor(){
+        dte1 = null;
+        dte2 = null;
+    }
+
     @Test
-    public void test1(){
+    public void testVectorClocks(){
         assertEquals(Math.toIntExact(dte1.getVectorClock().get(dte1.getLocalAddress())),0);
         addTextInsert("a",0,dte1.getArea1());
         try {Thread.sleep(100);} catch (InterruptedException e) {}
@@ -42,12 +50,23 @@ public class MyTest1 {
     }
 
     @Test
-    public void test2(){
+    public void shouldBeText_ab(){
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         assertEquals(dte2.getArea1().getText(), "ab" );
         assertEquals(dte1.getArea1().getText(), "ab" );
+    }
+
+    @Test
+    public void shouldBeText_aabb(){
+        addTextInsert("a",0,dte1.getArea1());
+        addTextInsert("b",0,dte2.getArea1());
+        addTextInsert("a",0,dte1.getArea1());
+        addTextInsert("b",0,dte2.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea1().getText(), "aabb" );
+        assertEquals(dte1.getArea1().getText(), "aabb" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){
