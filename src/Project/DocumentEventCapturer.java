@@ -17,15 +17,16 @@ import javax.swing.text.DocumentFilter;
  */
 public class DocumentEventCapturer extends DocumentFilter {
 
+	private  EventReplayer er;
 	/*
-     * We are using a blocking queue for two reasons: 
-     * 1) They are thread safe, i.e., we can have two threads add and take elements 
-     *    at the same time without any race conditions, so we do not have to do  
-     *    explicit synchronization.
-     * 2) It gives us a member take() which is blocking, i.e., if the queue is
-     *    empty, then take() will wait until new elements arrive, which is what
-     *    we want, as we then don't need to keep asking until there are new elements.
-     */
+         * We are using a blocking queue for two reasons: 
+         * 1) They are thread safe, i.e., we can have two threads add and take elements 
+         *    at the same time without any race conditions, so we do not have to do  
+         *    explicit synchronization.
+         * 2) It gives us a member take() which is blocking, i.e., if the queue is
+         *    empty, then take() will wait until new elements arrive, which is what
+         *    we want, as we then don't need to keep asking until there are new elements.
+         */
 	protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<MyTextEvent>();
 
 	/**
@@ -34,6 +35,11 @@ public class DocumentEventCapturer extends DocumentFilter {
 	 *
 	 * @return Head of the recorded event queue.
 	 */
+
+	public void setEventReplayer(EventReplayer er){
+		this.er = er;
+	}
+
 	MyTextEvent take() throws InterruptedException {
 		//small change
 		return eventHistory.take();
@@ -46,6 +52,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 			System.out.println("I got null in construction");
 		eventHistory.add(new TextInsertEvent(offset, str));
 		super.insertString(fb, offset, str, a);
+
 	}
 
 	public void remove(FilterBypass fb, int offset, int length)

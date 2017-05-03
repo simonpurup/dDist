@@ -39,14 +39,14 @@ public class Connection implements Runnable {
         while (running) {
             try {
                 EventMessage message = (EventMessage) inputStream.readObject();
-                er.handleMessage(message, socket.getRemoteSocketAddress().toString());
+                er.handleMessage(message);
             } catch (IOException e) {
                 if (e instanceof EOFException) {
                     running = false;
                     er.disconnectDTE();
-                } else if (e instanceof SocketException && e.getMessage().equals("Socket closed")) {
+                } else if (e instanceof SocketException) {
                     if (running) {
-                        e.printStackTrace();
+                        running = false;
                     }
                     else
                         er.disconnectDTE();
