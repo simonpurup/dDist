@@ -100,8 +100,7 @@ public class DistributedTextEditor extends JFrame {
 	edit.add(Copy);
 	edit.add(Paste);
 	edit.getItem(0).setText("Copy");
-	edit.getItem(1).setText("Paste");
-
+	edit.getItem(1).setText("Paste");//Nothing much
 	Save.setEnabled(false);
 	SaveAs.setEnabled(false);
 		

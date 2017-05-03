@@ -35,6 +35,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 	 * @return Head of the recorded event queue.
 	 */
 	MyTextEvent take() throws InterruptedException {
+		//small change
 		return eventHistory.take();
 	}
 

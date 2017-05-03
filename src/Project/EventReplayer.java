@@ -69,29 +69,22 @@ public class EventReplayer implements Runnable {
 		dte.disconnectClear();
 	}
 
-	public void handleMessage(EventMessage message, String sender){
+	public void handleMessage(EventMessage message){
 		MyTextEvent mte = message.getTextEvent();
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
 		addReceivedEvent(mte);
-		//Only works with 2 clients
-		int priority = dte.priority;
 
 		if(mte instanceof TextInsertEvent)
 			System.out.println("I am dte: " + dte.priority + " i got message: " + ((TextInsertEvent) mte).getText());
 		else
 			System.out.println("I am dte: " + dte.priority + " i got message: remove " + mte.getOffset() + " to "+ (mte.getOffset()+((TextRemoveEvent)mte).getLength()));
-		//For debugging
-//		System.out.println("Message");
-//		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
-//		System.out.println("Local");
-//		printMap((HashMap<String,Integer>)vectorClock.clone());
 
 		//If the timestamp of the message corresponding to this process is equal to the actual clock, update
 		//local(V[me]) == Message(V[me]) update
 		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
 		System.out.println(vectorClock.get(dte.getLocalAddress()));
-		if(priority == 0 || message.getVectorClock().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
+		if(dte.priority == 0 || message.getVectorClock().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
 			printMessage(message.getTextEvent());
 		}
 		//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
