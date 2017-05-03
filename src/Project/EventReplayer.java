@@ -77,6 +77,10 @@ public class EventReplayer implements Runnable {
 		//Only works with 2 clients
 		int priority = dte.priority;
 
+		if(mte instanceof TextInsertEvent)
+			System.out.println("I am dte: " + dte.priority + " i got message: " + ((TextInsertEvent) mte).getText());
+		else
+			System.out.println("I am dte: " + dte.priority + " i got message: remove " + mte.getOffset() + " to "+ (mte.getOffset()+((TextRemoveEvent)mte).getLength()));
 		//For debugging
 //		System.out.println("Message");
 //		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
@@ -104,6 +108,7 @@ public class EventReplayer implements Runnable {
 						before.add(e.mte);
 					}
 				}
+				System.out.println("Yep");
 				LinkedList<MyTextEvent> eventsToPerform = undoTextEvents(before,mte);
 				for(MyTextEvent e : eventsToPerform){
 					addReceivedEvent(e);
@@ -173,7 +178,7 @@ public class EventReplayer implements Runnable {
 				} else {
 					if (B instanceof TextInsertEvent) {
 						if (B.getOffset() >= A.getOffset()) {
-							if (B.getOffset() > A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+							if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
 								int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
 								new_event = new TextInsertEvent(offset, ((TextInsertEvent) B).getText());
 							} else {
