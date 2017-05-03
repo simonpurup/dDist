@@ -3,6 +3,7 @@ package Project;
  * Created by lærerPC on 30-04-2017.
  */
 
+import Project.DistributedTextEditor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +27,7 @@ public class MyTest1 {
         dte2.setPortNumber("40499");
         dte2.setIpaddress("127.0.1.1");
         dte2.connect();
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
     }
 
     @Test
@@ -43,7 +45,7 @@ public class MyTest1 {
     public void test2(){
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
-        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
         assertEquals(dte2.getArea1().getText(), "ab" );
         assertEquals(dte1.getArea1().getText(), "ab" );
     }
