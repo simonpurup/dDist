@@ -40,12 +40,10 @@ public class EventReplayer implements Runnable {
 				if(!isReceivedEvent(mte)){
 					if(!(mte instanceof TextInsertEvent && ((TextInsertEvent) mte).getText() == null)) {
 						HashMap<String, Integer> vectorClock = dte.getVectorClock();
-						if(vectorClock.get(dte.getLocalAddress()) != null)
+							if(vectorClock.get(dte.getLocalAddress()) != null)
 						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
 						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
-							System.out.println("System nanotime: " + System.nanoTime());
-							System.out.println("Time from logged event: " + eventLog.get(0).time);
 							eventLog.remove(0);
 						}
 						if (connection != null){
@@ -64,10 +62,6 @@ public class EventReplayer implements Runnable {
 		HashMap<String, Integer> vectorClock = dte.getVectorClock();
 
 		addReceivedEvent(mte);
-		//Only works with 2 clients
-		int priority = 0;
-		if(dte.priority == 0)
-			priority = 1;
 
 		//For debugging
 //		System.out.println("Message");
@@ -83,7 +77,7 @@ public class EventReplayer implements Runnable {
 		//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
 		else{
 			//If local(V[me]) > Message(V[me] && Priority(me) > priority(him) update
-			if(priority == 0){
+			if(dte.priority == 0){
 				printMessage(message.getTextEvent());
 			}
 			//If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
@@ -146,7 +140,7 @@ public class EventReplayer implements Runnable {
 				if (A instanceof TextInsertEvent) {
 					if (B instanceof TextInsertEvent) {
 						TextInsertEvent B_tie = (TextInsertEvent) B;
-						if (B.getOffset() < A.getOffset())
+						if (B.getOffset() > A.getOffset())
 							new_event = B;
 						else {
 							int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
@@ -243,9 +237,15 @@ public class EventReplayer implements Runnable {
 		new Thread(connection).start();
 	}
 
-	public void disConnect() {
+	public void disconnect() {
 		connection.disconnect();
+		connection = null;
 	}
+	public void disconnectDTE() {
+		connection = null;
+		dte.disconnectClear();
+	}
+
 
 	private synchronized  void addReceivedEvent(MyTextEvent e){
 		receivedEvents.add(e);

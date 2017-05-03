@@ -54,8 +54,8 @@ public class MyTest1 {
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
-        assertEquals(dte2.getArea1().getText(), "ab" );
         assertEquals(dte1.getArea1().getText(), "ab" );
+        assertEquals(dte2.getArea1().getText(), "ab" );
     }
 
     @Test

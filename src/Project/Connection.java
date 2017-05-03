@@ -42,21 +42,16 @@ public class Connection implements Runnable {
                 er.handleMessage(message, socket.getRemoteSocketAddress().toString());
             } catch (IOException e) {
                 if (e instanceof EOFException) {
-                    //If the connection is closed on the other end, an EOFException will be
-                    //thrown. Therefore we disconnect on this end as well.
-
-                    //TODO: Disconnect logic
+                    running = false;
+                    er.disconnectDTE();
                 } else if (e instanceof SocketException && e.getMessage().equals("Socket closed")) {
-                    if (!Thread.interrupted()) {
+                    if (running) {
                         e.printStackTrace();
                     }
-                    //If the connection has been closed, and the thread is interrupted, the
-                    //connection has been closed by this instance of the DTE, so do nothing.
-
-                    //TODO: Disconnect logic
-                } else {
+                    else
+                        er.disconnectDTE();
+                } else
                     e.printStackTrace();
-                }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }

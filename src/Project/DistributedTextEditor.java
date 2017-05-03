@@ -229,14 +229,18 @@ public class DistributedTextEditor extends JFrame {
 			}
 		}
 	};
-
-	public void disconnect(){
-		er.disConnect();
+	public void disconnectClear() {
+		vectorClock = new HashMap<String, Integer>();
 		setTitle("Disconnected");
 		area1.setText("");
 		changed = false;
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);
+	}
+
+	public void disconnect(){
+		er.disconnect();
+		disconnectClear();
 	}
 
     Action Save = new AbstractAction("Save") {
@@ -298,4 +302,5 @@ public class DistributedTextEditor extends JFrame {
     public static void main(String[] arg) {
     	new DistributedTextEditor();
     }
+
 }
