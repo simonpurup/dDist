@@ -28,7 +28,7 @@ public class MyTest1 {
         dte2.setPortNumber("40499");
         dte2.setIpaddress("127.0.1.1");
         dte2.connect();
-        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
     }
 
 
@@ -53,13 +53,13 @@ public class MyTest1 {
     public void shouldBeText_ab(){
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
-        try {Thread.sleep(2000);} catch (InterruptedException e) {}
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
         assertEquals(dte1.getArea1().getText(), "ba" );
         assertEquals(dte2.getArea1().getText(), "ba" );
     }
 
     @Test
-    public void shouldBeText_aabb(){
+    public void shouldBeText_bbaa(){
         addTextInsert("a",0,dte1.getArea1());
         addTextInsert("b",0,dte2.getArea1());
         addTextInsert("a",0,dte1.getArea1());
@@ -67,6 +67,29 @@ public class MyTest1 {
         try {Thread.sleep(1000);} catch (InterruptedException e) {}
         assertEquals(dte1.getArea1().getText(), "bbaa" );
         assertEquals(dte2.getArea1().getText(), "bbaa" );
+    }
+
+    @Test
+    public void shouldBeText_Testb_texts(){
+        addTextInsert("Test text",0,dte1.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        addTextInsert("b",4,dte2.getArea1());
+        addTextInsert("s",9,dte1.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea1().getText(), "Testb texts" );
+        assertEquals(dte2.getArea1().getText(), "Testb texts" );
+    }
+
+    @Test
+    public void shouldBeText_of_texts(){
+        addTextInsert("Test text",0,dte1.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        addTextInsert("of ",5,dte1.getArea1());
+        try {Thread.sleep(100);} catch (InterruptedException e) {}
+        addTextRemove(0,5,dte2.getArea1());
+        try {Thread.sleep(1000);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea1().getText(), "of text" );
+        assertEquals(dte1.getArea1().getText(), "of text" );
     }
 
     public void addTextInsert(String text, int offset, JTextArea area){

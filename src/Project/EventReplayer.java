@@ -173,7 +173,7 @@ public class EventReplayer implements Runnable {
 				} else {
 					if (B instanceof TextInsertEvent) {
 						if (B.getOffset() >= A.getOffset()) {
-							if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+							if (B.getOffset() > A.getOffset() + ((TextRemoveEvent) A).getLength()) {
 								int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
 								new_event = new TextInsertEvent(offset, ((TextInsertEvent) B).getText());
 							} else {
