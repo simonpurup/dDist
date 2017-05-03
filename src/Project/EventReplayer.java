@@ -17,7 +17,7 @@ public class EventReplayer implements Runnable {
 	private JTextArea area;
 	private Connection connection;
 	private ArrayList<LoggedEvent> eventLog;
-	private static final long saveTime = 10^10;
+	private static final long saveTime = (long) Math.pow(10,10);
 
 	public EventReplayer(DocumentEventCapturer dec, JTextArea area, DistributedTextEditor dte) {
 		this.dec = dec;
@@ -44,6 +44,8 @@ public class EventReplayer implements Runnable {
 						vectorClock.put(dte.getLocalAddress(), vectorClock.get(dte.getLocalAddress()) + 1);
 						eventLog.add(new LoggedEvent(mte, vectorClock, System.nanoTime(),dte.priority));
 						while (eventLog.size() > 0 && System.nanoTime() - eventLog.get(0).time > saveTime) {
+							System.out.println("System nanotime: " + System.nanoTime());
+							System.out.println("Time from logged event: " + eventLog.get(0).time);
 							eventLog.remove(0);
 						}
 						if (connection != null){
@@ -68,11 +70,10 @@ public class EventReplayer implements Runnable {
 			priority = 1;
 
 		//For debugging
-		System.out.println("Message");
-		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
-		System.out.println("Local");
-		printMap((HashMap<String,Integer>)vectorClock.clone());
-
+//		System.out.println("Message");
+//		printMap((HashMap<String,Integer>)message.getVectorClock().clone());
+//		System.out.println("Local");
+//		printMap((HashMap<String,Integer>)vectorClock.clone());
 
 		//If the timestamp of the message corresponding to this process is equal to the actual clock, update
 		//local(V[me]) == Message(V[me]) update
@@ -97,6 +98,7 @@ public class EventReplayer implements Runnable {
 				}
 				LinkedList<MyTextEvent> eventsToPerform = rearrangeTextEvent(before,mte);
 				for(MyTextEvent e : eventsToPerform){
+					addReceivedEvent(e);
 					printMessage(e);
 				}
 			}

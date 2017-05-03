@@ -40,7 +40,6 @@ public class Connection implements Runnable {
             try {
                 EventMessage message = (EventMessage) inputStream.readObject();
                 er.handleMessage(message, socket.getRemoteSocketAddress().toString());
-
             } catch (IOException e) {
                 if (e instanceof EOFException) {
                     //If the connection is closed on the other end, an EOFException will be
