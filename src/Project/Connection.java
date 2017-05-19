@@ -1,55 +1,51 @@
 package Project;
 
-import java.awt.*;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * Created by lærerPC on 27-04-2017.
- */
 public class Connection implements Runnable {
 
     private final Socket socket;
-    private final EventReplayer er;
     private ObjectOutputStream outStream;
     private ObjectInputStream inputStream;
+    private LinkedBlockingQueue<Event> eventsToPerform;
     private boolean running;
 
-    public Connection(Socket socket, EventReplayer er) {
+    public Connection(Socket socket, LinkedBlockingQueue<Event> eventsToPerform) {
         this.socket = socket;
-        this.er = er;
+        this.eventsToPerform = eventsToPerform;
         try {
             outStream = new ObjectOutputStream(socket.getOutputStream());
+            inputStream = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        try {
-            inputStream = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-        }
     }
 
-    //Listens for incomming
+    //Listens for incoming events
     public void run() {
         running = true;
         while (running) {
             try {
-                EventMessage message = (EventMessage) inputStream.readObject();
-                er.handleMessage(message);
+                Event event = (Event) inputStream.readObject();
+                eventsToPerform.add(event);
             } catch (IOException e) {
+                //TODO: handle closing of connections
                 if (e instanceof EOFException) {
                     running = false;
-                    er.disconnectDTE();
+                    //er.disconnectDTE();
                 } else if (e instanceof SocketException) {
                     if (running) {
                         running = false;
+                        //er.disconnectDTE();
                     }
-                    else
-                        er.disconnectDTE();
+                    //else
+                        //er.disconnectDTE();
                 } else
                     e.printStackTrace();
             } catch (ClassNotFoundException e) {
@@ -58,7 +54,7 @@ public class Connection implements Runnable {
         }
     }
 
-    public  void send(EventMessage message) {
+    public void send(Event message) {
         try {
             outStream.writeObject(message);
         } catch (IOException e) {

@@ -6,15 +6,11 @@ import java.util.HashMap;
  * Created by lærerPC on 27-04-2017.
  */
 public class LoggedEvent {
-    public int priority;
-    public HashMap<String, Integer> vectorClock;
-    public MyTextEvent mte;
+    public Event event;
     public long time;
 
-    public LoggedEvent(MyTextEvent mte, HashMap<String, Integer> vectorClock, long time, int priority){
-        this.mte = mte;
-        this.vectorClock = (HashMap<String, Integer>) vectorClock.clone();
+    public LoggedEvent(Event event, long time){
+        this.event = event;
         this.time = time;
-        this.priority = priority;
     }
 }
