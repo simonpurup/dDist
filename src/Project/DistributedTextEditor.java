@@ -8,51 +8,40 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.*;
 import javax.swing.text.*;
 
-
 public class DistributedTextEditor extends JFrame {
-
-	public JTextArea getArea1() {
-		return area1;
-	}
-
+	private LinkedList<MyTextEvent> eventsPerformed;
+	private LinkedBlockingQueue<Event> eventsToPerform;
 	private JTextArea area1 = new JTextArea(50,120);
     private JTextField ipaddress = new JTextField("IP address here");     
     private JTextField portNumber = new JTextField("Port number here");     
+
+    private EventHandler eventHandler;
     
-    private EventReplayer er;
-    private Thread ert; 
-    
-    private JFileChooser dialog = 
-    		new JFileChooser(System.getProperty("user.dir"));
+    private JFileChooser dialog = new JFileChooser(System.getProperty("user.dir"));
 
     private String currentFile = "Untitled";
     private boolean changed = false;
     private boolean listening = false;
-    private DocumentEventCapturer dec = new DocumentEventCapturer();
+    private DocumentEventCapturer dec;
 
     private int port = 80;
     private ServerSocket serverSocket = null;
     private Socket socket;
     public  int priority = 0;
 
-
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
-	private final DistributedTextEditor dte = this;
-
-	public HashMap<String, Integer> getVectorClock() {
-		return vectorClock;
-	}
-
-	public void setVectorClock(HashMap<String, Integer> vectorClock) {
-		this.vectorClock = vectorClock;
-	}
 
 	private HashMap<String, Integer> vectorClock;
     
     public DistributedTextEditor() {
+    	eventsPerformed = new LinkedList<>();
+		eventsToPerform = new LinkedBlockingQueue<>();
+		dec = new DocumentEventCapturer(eventsToPerform,this);
 		try {
 			InetAddress localhost = InetAddress.getLocalHost();
 			localAddress = localhost.getHostAddress();
@@ -64,7 +53,8 @@ public class DistributedTextEditor extends JFrame {
 			e.printStackTrace();
 		}
 
-		vectorClock = new HashMap<String, Integer>();
+		vectorClock = new HashMap<>();
+		vectorClock.put(localAddress,0);
 
 		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -74,46 +64,48 @@ public class DistributedTextEditor extends JFrame {
     	content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
     	
     	JScrollPane scroll1 = 
-    			new JScrollPane(area1, 
+    			new JScrollPane(area1,
     					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
     					JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
     	content.add(scroll1,BorderLayout.CENTER);
 		
 		content.add(ipaddress,BorderLayout.CENTER);	
-		content.add(portNumber,BorderLayout.CENTER);	
-		
-	JMenuBar JMB = new JMenuBar();
-	setJMenuBar(JMB);
-	JMenu file = new JMenu("File");
-	JMenu edit = new JMenu("Edit");
-	JMB.add(file); 
-	JMB.add(edit);
-	
-	file.add(Listen);
-	file.add(Connect);
-	file.add(Disconnect);
-	file.addSeparator();
-	file.add(Save);
-	file.add(SaveAs);
-	file.add(Quit);
-		
-	edit.add(Copy);
-	edit.add(Paste);
-	edit.getItem(0).setText("Copy");
-	edit.getItem(1).setText("Paste");//Nothing much
-	Save.setEnabled(false);
-	SaveAs.setEnabled(false);
-		
-	setDefaultCloseOperation(EXIT_ON_CLOSE);
-	pack();
-	area1.addKeyListener(k1);
-	setTitle("Disconnected");
-	setVisible(true);
+		content.add(portNumber,BorderLayout.CENTER);
 
-	er = new EventReplayer(dec, area1, this);
-	ert = new Thread(er);
-	ert.start();
-    }
+		JMenuBar JMB = new JMenuBar();
+		setJMenuBar(JMB);
+		JMenu file = new JMenu("File");
+		JMenu edit = new JMenu("Edit");
+		JMB.add(file);
+		JMB.add(edit);
+
+		file.add(Listen);
+		file.add(Connect);
+		file.add(Disconnect);
+		file.addSeparator();
+		file.add(Save);
+		file.add(SaveAs);
+		file.add(Quit);
+
+		edit.add(Copy);
+		edit.add(Paste);
+		edit.getItem(0).setText("Copy");
+		edit.getItem(1).setText("Paste");//Nothing much
+		Save.setEnabled(false);
+		SaveAs.setEnabled(false);
+
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		pack();
+		area1.addKeyListener(k1);
+		setTitle("Disconnected");
+		setVisible(true);
+
+		eventHandler = new EventHandler(eventsToPerform,this);
+		eventHandler.start();
+		//er = new EventReplayer(dec, area1, this);
+		//ert = new Thread(er);
+		//ert.start();
+	}
 
     private KeyListener k1 = new KeyAdapter() {
 	    public void keyPressed(KeyEvent e) {
@@ -128,14 +120,6 @@ public class DistributedTextEditor extends JFrame {
 	    	listen();
 	    }
 	};
-
-	public void setIpaddress(String ipaddress) {
-		this.ipaddress.setText(ipaddress);
-	}
-
-	public void setPortNumber(String portNumber) {
-		this.portNumber.setText(portNumber);
-	}
 
 	public void listen() {
 		saveOld();
@@ -153,7 +137,8 @@ public class DistributedTextEditor extends JFrame {
 				}
 				try {
 					socket = serverSocket.accept();
-					er.connect(socket);
+					Connection connection = new Connection(socket,eventsToPerform);
+					eventHandler.addConnection(connection);
 					serverSocket.close();
 					localAddress = socket.getLocalSocketAddress().toString();
 					vectorClock.put(localAddress, 0);
@@ -190,7 +175,8 @@ public class DistributedTextEditor extends JFrame {
 		port = Integer.parseInt(portNumber.getText());
 		try {
 			socket = new Socket(ipaddress.getText(), port);
-			er.connect(socket);
+			Connection connection = new Connection(socket,eventsToPerform);
+			eventHandler.addConnection(connection);
 			localAddress = socket.getLocalSocketAddress().toString();
 			vectorClock.put(localAddress, 0);
 			vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
@@ -218,6 +204,7 @@ public class DistributedTextEditor extends JFrame {
 			}
 		}
 	};
+
 	public void disconnectClear() {
 		vectorClock = new HashMap<String, Integer>();
 		setTitle("Disconnected");
@@ -228,7 +215,7 @@ public class DistributedTextEditor extends JFrame {
 	}
 
 	public void disconnect(){
-		er.disconnect();
+		//er.disconnect();
 		disconnectClear();
 	}
 
@@ -255,7 +242,6 @@ public class DistributedTextEditor extends JFrame {
 	};
 	
     ActionMap m = area1.getActionMap();
-
     Action Copy = m.get(DefaultEditorKit.copyAction);
     Action Paste = m.get(DefaultEditorKit.pasteAction);
 
@@ -272,24 +258,47 @@ public class DistributedTextEditor extends JFrame {
     }
     
     private void saveFile(String fileName) {
-	try {
-	    FileWriter w = new FileWriter(fileName);
-	    area1.write(w);
-	    w.close();
-	    currentFile = fileName;
-	    changed = false;
-	    Save.setEnabled(false);
-	}
-	catch(IOException e) {
-		e.printStackTrace();	}
+		try {
+			FileWriter w = new FileWriter(fileName);
+			area1.write(w);
+			w.close();
+			currentFile = fileName;
+			changed = false;
+			Save.setEnabled(false);
+		}
+		catch(IOException e) {
+			e.printStackTrace();	}
     }
+
+	public void setIpaddress(String ipaddress) {
+		this.ipaddress.setText(ipaddress);
+	}
+
+	public void setPortNumber(String portNumber) {
+		this.portNumber.setText(portNumber);
+	}
 
 	public String getLocalAddress() {
 		return localAddress;
+	}
+
+	public HashMap<String, Integer> getVectorClock() {
+		return vectorClock;
 	}
     
     public static void main(String[] arg) {
     	new DistributedTextEditor();
     }
 
+	public String getIdentifier() {
+		return localAddress;
+	}
+
+	public LinkedList<MyTextEvent> getEventsPerformed(){
+    	return eventsPerformed;
+	}
+
+	public JTextArea getArea(){
+    	return area1;
+	}
 }
