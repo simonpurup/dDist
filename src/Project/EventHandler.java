@@ -100,7 +100,7 @@ public class EventHandler extends Thread{
      * @return List of events to be performed inorder to carry out the change of the text event <param>e</param>.
      * The list is ordered such that pullFirst() will give the event that is to be carried out first.
      */
-    private LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
+    public LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
         LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
         eventsToPerform.add(e);
         for(MyTextEvent A : eventsToUndo) {
