@@ -48,6 +48,9 @@ public class DocumentEventCapturer extends DocumentFilter {
 
 		if(str != null) { //If the string is zero, we do not consider it an event
 			MyTextEvent textEvent = new TextInsertEvent(offset, str);
+			//When an action is intercepted it should always be the first element of
+			//the eventsPerformed queue if actually want to perfom it
+			//If not the event is sent to the eventhandler for consideration
 			if(eventsPerformed.peekFirst() != null &&
 					eventsPerformed.peekFirst().equals(textEvent)){
 				eventsPerformed.remove(textEvent);

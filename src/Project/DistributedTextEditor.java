@@ -29,16 +29,16 @@ public class DistributedTextEditor extends JFrame {
     private boolean listening = false;
     private DocumentEventCapturer dec;
 
-    private int port = 80;
+    private int port = 40499;
     private ServerSocket serverSocket = null;
     private Socket socket;
-    public  int priority = 0;
 
 	private String localAddress = "xxxx.xxxx.xxxx.xxxx";
 
-	private HashMap<String, Integer> vectorClock;
-    
-    public DistributedTextEditor() {
+	private HashMap<Integer, Integer> vectorClock;
+	private Integer identifier;
+
+	public DistributedTextEditor() {
     	eventsPerformed = new LinkedList<>();
 		eventsToPerform = new LinkedBlockingQueue<>();
 		dec = new DocumentEventCapturer(eventsToPerform,this);
@@ -54,8 +54,6 @@ public class DistributedTextEditor extends JFrame {
 		}
 
 		vectorClock = new HashMap<>();
-		vectorClock.put(localAddress,0);
-
 		//Premade initialisation
     	area1.setFont(new Font("Monospaced",Font.PLAIN,12));
     	((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
@@ -141,9 +139,9 @@ public class DistributedTextEditor extends JFrame {
 					eventHandler.addConnection(connection);
 					serverSocket.close();
 					localAddress = socket.getLocalSocketAddress().toString();
-					vectorClock.put(localAddress, 0);
-					vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
-					priority = 0;
+					vectorClock.put(0, 0);
+					vectorClock.put(1, 0);
+					identifier = 0;
 					listening = false;
 				} catch (IOException e1) {
 					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
@@ -178,9 +176,9 @@ public class DistributedTextEditor extends JFrame {
 			Connection connection = new Connection(socket,eventsToPerform);
 			eventHandler.addConnection(connection);
 			localAddress = socket.getLocalSocketAddress().toString();
-			vectorClock.put(localAddress, 0);
-			vectorClock.put(socket.getRemoteSocketAddress().toString(), 0);
-			priority = 1;
+			vectorClock.put(1, 0);
+			vectorClock.put(0, 0);
+			identifier = 1;
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -206,7 +204,7 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnectClear() {
-		vectorClock = new HashMap<String, Integer>();
+		vectorClock = new HashMap<Integer, Integer>();
 		setTitle("Disconnected");
 		area1.setText("");
 		changed = false;
@@ -282,16 +280,19 @@ public class DistributedTextEditor extends JFrame {
 		return localAddress;
 	}
 
-	public HashMap<String, Integer> getVectorClock() {
+	public HashMap<Integer, Integer> getVectorClock() {
 		return vectorClock;
+	}
+	public void setVectorClock(HashMap<Integer, Integer> vectorClock) {
+		this.vectorClock = vectorClock;
 	}
     
     public static void main(String[] arg) {
     	new DistributedTextEditor();
     }
 
-	public String getIdentifier() {
-		return localAddress;
+	public Integer getIdentifier() {
+		return identifier;
 	}
 
 	public LinkedList<MyTextEvent> getEventsPerformed(){

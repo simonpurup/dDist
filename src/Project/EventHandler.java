@@ -28,6 +28,7 @@ public class EventHandler extends Thread{
 
     @Override
     public void run() {
+        //TODO removing old elements from the logged queue should be added to the loop
         while(!isInterrupted()){
             try {
                 Event event = eventsToPerform.take();
@@ -39,14 +40,13 @@ public class EventHandler extends Thread{
     }
 
     public void handleEvent(Event event){
-        if(dte.getIdentifier().equals(event.getSource()))
-            sendEvent(event);
-
-        HashMap<String, Integer> vectorClock = dte.getVectorClock();
-        if(dte.priority == 0 || event.getTimestamp().get(dte.getLocalAddress()).equals(vectorClock.get(dte.getLocalAddress()))){
+        //TODO: This does not appear to make any sense at all, we perform the event if we have priority 0
+        // or the vectorclock of the event has the same value for our process as the process own vectorclock has
+        HashMap<Integer, Integer> vectorClock = dte.getVectorClock();
+        if(dte.getIdentifier() == 0 || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
             eventsPerformed.add(event.getTextEvent());
             executeEvent(event.getTextEvent());
-            eventLog.add(new LoggedEvent(new Event(event.getTextEvent(),event.getSource(),event.getTimestamp()),
+            eventLog.add(new LoggedEvent(new Event(event.getTextEvent(),event.getSource(),event.getTimeStamp()),
                     System.nanoTime()));
         }
         //If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
@@ -55,27 +55,40 @@ public class EventHandler extends Thread{
             ArrayList<MyTextEvent> before = new ArrayList<>();
             for(int i = eventLog.size() - 1; i >= 0; i--){
                 LoggedEvent e = eventLog.get(i);
-                if(e.vectorClock.get(dte.getLocalAddress()) > event.getTimestamp().get(dte.getLocalAddress())){
-                    before.add(e.event);
+                if(e.event.getTimeStamp().get(dte.getIdentifier()) > event.getTimeStamp().get(dte.getIdentifier())){
+                    before.add(e.event.getTextEvent());
                 }
             }
 
-            LinkedList<MyTextEvent> eventsToPerform = undoTextEvents(before,event.getTextEvent());
-            for(MyTextEvent e : eventsToPerform){
+            LinkedList<MyTextEvent> eventsToRollBack = undoTextEvents(before,event.getTextEvent());
+            for(MyTextEvent e : eventsToRollBack){
                 eventsPerformed.add(e);
                 executeEvent(e);
-                eventLog.add(new LoggedEvent(new Event(e,event.getSource(),event.getTimestamp()),
+                eventLog.add(new LoggedEvent(new Event(e,event.getSource(),event.getTimeStamp()),
                         System.nanoTime()));
             }
         }
-        //Syncs vector-clocks
-        for (Object o : event.getTimestamp().entrySet()) {
-            Map.Entry pair = (Map.Entry) o;
-            if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
-                vectorClock.put((String) pair.getKey(), (int) pair.getValue());
+        //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
+        //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
+        if(!dte.getIdentifier().equals(event.getSource())) {
+            System.out.println("");
+            for (Object o : event.getTimeStamp().entrySet()) {
+                Map.Entry pair = (Map.Entry) o;
+                if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
+                    vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
+                }
             }
         }
-
+        //If it is our own event send it after all other logic to the peers updating the vectorclock first
+        else {
+            if(!(vectorClock.get(dte.getIdentifier()) == null))
+            vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
+            else
+                vectorClock.put(dte.getIdentifier(),0);
+            event.setTimeStamp(vectorClock);
+            sendEvent(new Event(event.getTextEvent(),dte.getIdentifier(),(HashMap<Integer,Integer>)vectorClock.clone()));
+        }
+        dte.setVectorClock(vectorClock);
     }
 
     /** Rearranges the order of the events provided, such that the provided text event is transformed into
@@ -158,7 +171,6 @@ public class EventHandler extends Thread{
     }
 
     private void sendEvent(Event event){
-        //TODO: update vector clock
         for(Connection con: connections) {
             con.send(event);
         }

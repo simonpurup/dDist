@@ -25,6 +25,7 @@ public class Connection implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        new Thread(this).start();
     }
 
     //Listens for incoming events

@@ -1,30 +1,38 @@
 package Project;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * Created by Simon Purup Eskildsen on 5/5/17.
  */
-public class Event {
+public class Event implements Serializable{
     private MyTextEvent textEvent;
-    private String source;
-    private HashMap<String, Integer> timestamp;
+    private Integer source;
+    private HashMap<Integer, Integer> timeStamp;
 
-    public Event(MyTextEvent myTextEvent, String source, HashMap<String, Integer> timestamp) {
+    public Event(MyTextEvent myTextEvent, Integer source, HashMap<Integer, Integer> timestamp) {
+        //The event
         this.textEvent = myTextEvent;
+        //The identifier of the source, for now the adress of the peer
         this.source = source;
-        this.timestamp = timestamp;
+        //The vectorclock of the source at the time of the event.
+        this.timeStamp = timestamp;
     }
 
     public MyTextEvent getTextEvent() {
         return textEvent;
     }
 
-    public String getSource() {
+    public Integer getSource() {
         return source;
     }
 
-    public HashMap<String, Integer> getTimestamp() {
-        return timestamp;
+    public HashMap<Integer, Integer> getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(HashMap<Integer, Integer> timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }
