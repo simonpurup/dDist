@@ -33,8 +33,9 @@ public class Connection implements Runnable {
         running = true;
         while (running) {
             try {
-                Event event = (Event) inputStream.readObject();
-                eventsToPerform.add(event);
+                Object o =  inputStream.readObject();
+                if(o instanceof  Event)
+                    eventsToPerform.add((Event) o);
             } catch (IOException e) {
                 //TODO: handle closing of connections
                 if (e instanceof EOFException) {
@@ -55,7 +56,7 @@ public class Connection implements Runnable {
         }
     }
 
-    public void send(Event message) {
+    public void send(Packet message) {
         try {
             outStream.writeObject(message);
         } catch (IOException e) {
@@ -76,5 +77,9 @@ public class Connection implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getIP() {
+        return socket.getRemoteSocketAddress().toString();
     }
 }

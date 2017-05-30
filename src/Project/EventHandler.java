@@ -1,5 +1,6 @@
 package Project;
 
+import javax.lang.model.type.ArrayType;
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
@@ -40,10 +41,9 @@ public class EventHandler extends Thread{
     }
 
     public void handleEvent(Event event){
-        //TODO: This does not appear to make any sense at all, we perform the event if we have priority 0
-        // or the vectorclock of the event has the same value for our process as the process own vectorclock has
         HashMap<Integer, Integer> vectorClock = dte.getVectorClock();
-        if(dte.getIdentifier() == 0 || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
+        //TODO initialize Vectorclocks and identifier so we are able to write without being connected
+        if(dte.getIdentifier() <= event.getSource() || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
             eventsPerformed.add(event.getTextEvent());
             executeEvent(event.getTextEvent());
             eventLog.add(new LoggedEvent(new Event(event.getTextEvent(),event.getSource(),event.getTimeStamp()),
@@ -71,7 +71,6 @@ public class EventHandler extends Thread{
         //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
         //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
         if(!dte.getIdentifier().equals(event.getSource())) {
-            System.out.println("");
             for (Object o : event.getTimeStamp().entrySet()) {
                 Map.Entry pair = (Map.Entry) o;
                 if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
@@ -102,6 +101,10 @@ public class EventHandler extends Thread{
      */
     private LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
         LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
+        if(eventsToUndo.size() == 0){
+            eventsToPerform.add(e);
+            return eventsToPerform;
+        }
         eventsToPerform.add(e);
         for(MyTextEvent A : eventsToUndo) {
             MyTextEvent B = eventsToPerform.pollFirst();
@@ -170,10 +173,18 @@ public class EventHandler extends Thread{
         return eventsToPerform;
     }
 
-    private void sendEvent(Event event){
+    private void sendEvent(Packet event){
         for(Connection con: connections) {
             con.send(event);
         }
+    }
+
+    public LinkedList<String> getConnections(){
+        LinkedList<String> ips = new LinkedList<String>();
+        for(Connection c : connections){
+            ips.add(c.getIP());
+        }
+        return ips;
     }
 
     private void executeEvent(MyTextEvent textEvent) {

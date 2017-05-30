@@ -37,6 +37,7 @@ public class DistributedTextEditor extends JFrame {
 
 	private HashMap<Integer, Integer> vectorClock;
 	private Integer identifier;
+	private boolean isConnected = false;
 
 	public DistributedTextEditor() {
     	eventsPerformed = new LinkedList<>();
@@ -126,7 +127,6 @@ public class DistributedTextEditor extends JFrame {
 		area1.setEditable(false);
 		listening = true;
 		new Thread(new Runnable() {
-			@Override
 			public void run() {
 				try {
 					serverSocket = new ServerSocket(port);
@@ -143,6 +143,7 @@ public class DistributedTextEditor extends JFrame {
 					vectorClock.put(1, 0);
 					identifier = 0;
 					listening = false;
+					isConnected = true;
 				} catch (IOException e1) {
 					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
 						if(listening)
@@ -157,6 +158,26 @@ public class DistributedTextEditor extends JFrame {
 				changed = false;
 				Save.setEnabled(false);
 				SaveAs.setEnabled(false);
+				startConnectedListener();
+			}
+		}).start();
+	}
+
+	private void startConnectedListener() {
+		new Thread(new Runnable() {
+			public void run() {
+				port = port + getIdentifier();
+				setTitle(getTitle() + " | Listening for further connections on port: " + port);
+				try {
+					serverSocket = new ServerSocket(port);
+					socket = serverSocket.accept();
+					Connection connection = new Connection(socket,eventsToPerform);
+					eventHandler.addConnection(connection);
+					LinkedList<String> connectionIPS = eventHandler.getConnections();
+					connection.send(new ConnectionsPacket(connectionIPS));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}).start();
 	}
@@ -179,6 +200,7 @@ public class DistributedTextEditor extends JFrame {
 			vectorClock.put(1, 0);
 			vectorClock.put(0, 0);
 			identifier = 1;
+			isConnected = true;
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -204,6 +226,7 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnectClear() {
+		isConnected = false;
 		vectorClock = new HashMap<Integer, Integer>();
 		setTitle("Disconnected");
 		area1.setText("");

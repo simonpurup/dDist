@@ -87,7 +87,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 			if(eventsPerformed.peekFirst() != null &&
 					eventsPerformed.peekFirst().equals(textEvent)){
 				eventsPerformed.remove(textEvent);
-				super.insertString(fb, offset, str, a);
+				super.remove(fb, offset, length);
 			} else {
 				eventsToPerform.add(new Event(textEvent,
 						dte.getIdentifier(),
