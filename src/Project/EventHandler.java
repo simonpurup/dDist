@@ -71,15 +71,10 @@ public class EventHandler extends Thread{
         //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
         //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
         if(!dte.getIdentifier().equals(event.getSource())) {
-            for (Object o : event.getTimeStamp().entrySet()) {
-                Map.Entry pair = (Map.Entry) o;
-                if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
-                    vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
-                }
-            }
+            updateVectorClocks(event.getTimeStamp());
         }
         //If it is our own event send it after all other logic to the peers updating the vectorclock first
-        else {
+        else if(dte.getIdentifier().equals(event.getSource())){
             if(!(vectorClock.get(dte.getIdentifier()) == null))
             vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
             else
@@ -173,13 +168,13 @@ public class EventHandler extends Thread{
         return eventsToPerform;
     }
 
-    private void sendEvent(Packet event){
+    public void sendEvent(Packet event){
         for(Connection con: connections) {
             con.send(event);
         }
     }
 
-    public LinkedList<String> getConnections(){
+    public synchronized LinkedList<String> getConnections(){
         LinkedList<String> ips = new LinkedList<String>();
         for(Connection c : connections){
             ips.add(c.getIP());
@@ -209,7 +204,21 @@ public class EventHandler extends Thread{
         }
     }
 
-    public void addConnection(Connection con){
+    public synchronized void addConnection(Connection con){
         connections.add(con);
+    }
+
+    public void updateVectorClocks(HashMap<Integer, Integer> newVectorClock) {
+        HashMap<Integer,Integer> vectorClock = dte.getVectorClock();
+        for (Object o : newVectorClock.entrySet()) {
+            Map.Entry pair = (Map.Entry) o;
+            if(vectorClock.get(pair.getKey()) == null){
+                vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
+            }
+            else if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
+                vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
+            }
+        }
+        dte.setVectorClock(vectorClock);
     }
 }
