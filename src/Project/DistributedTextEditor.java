@@ -17,17 +17,17 @@ public class DistributedTextEditor extends JFrame {
 	private LinkedList<MyTextEvent> eventsPerformed;
 	private LinkedBlockingQueue<Event> eventsToPerform;
 	private JTextArea area1 = new JTextArea(50,120);
-    private JTextField ipaddress = new JTextField("IP address here");     
-    private JTextField portNumber = new JTextField("Port number here");     
+    private JTextField ipaddress = new JTextField("127.0.0.1");
+    private JTextField portNumber = new JTextField("40499");
 
-    private EventHandler eventHandler;
+	public EventHandler eventHandler;
     
     private JFileChooser dialog = new JFileChooser(System.getProperty("user.dir"));
 
     private String currentFile = "Untitled";
     private boolean changed = false;
     private boolean listening = false;
-    private DocumentEventCapturer dec;
+	public DocumentEventCapturer dec;
 
     private int port = 40499;
     private ServerSocket serverSocket = null;
@@ -37,6 +37,9 @@ public class DistributedTextEditor extends JFrame {
 
 	private HashMap<Integer, Integer> vectorClock;
 	private Integer identifier;
+	private boolean isConnected = false;
+	private int originalPort = 0;
+	private String originalIP = "";
 
 	public DistributedTextEditor() {
     	eventsPerformed = new LinkedList<>();
@@ -124,9 +127,9 @@ public class DistributedTextEditor extends JFrame {
 		port = Integer.parseInt(portNumber.getText());
 		setTitle("I'm listening on " + localAddress +":"+port);
 		area1.setEditable(false);
+		DistributedTextEditor dte  = this;
 		listening = true;
 		new Thread(new Runnable() {
-			@Override
 			public void run() {
 				try {
 					serverSocket = new ServerSocket(port);
@@ -135,14 +138,14 @@ public class DistributedTextEditor extends JFrame {
 				}
 				try {
 					socket = serverSocket.accept();
-					Connection connection = new Connection(socket,eventsToPerform);
+					Connection connection = new Connection(socket,eventsToPerform, eventHandler, dte);
 					eventHandler.addConnection(connection);
 					serverSocket.close();
 					localAddress = socket.getLocalSocketAddress().toString();
 					vectorClock.put(0, 0);
-					vectorClock.put(1, 0);
 					identifier = 0;
 					listening = false;
+					isConnected = true;
 				} catch (IOException e1) {
 					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
 						if(listening)
@@ -157,6 +160,32 @@ public class DistributedTextEditor extends JFrame {
 				changed = false;
 				Save.setEnabled(false);
 				SaveAs.setEnabled(false);
+				startConnectedListener();
+			}
+		}).start();
+	}
+
+	public void startConnectedListener() {
+		DistributedTextEditor dte = this;
+		new Thread(new Runnable() {
+			public void run() {
+				port = port + getIdentifier();
+				setTitle(getTitle() + " | Listening for further connections on port: " + port);
+				try {
+					serverSocket = new ServerSocket(port);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				while(isConnected) {
+					try {
+						socket = serverSocket.accept();
+						Connection connection = new Connection(socket, eventsToPerform, eventHandler, dte);
+						eventHandler.addConnection(connection);
+
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
 			}
 		}).start();
 	}
@@ -172,13 +201,14 @@ public class DistributedTextEditor extends JFrame {
 		setTitle("Connecting to " + ipaddress.getText() + ":" + portNumber.getText() + "...");
 		port = Integer.parseInt(portNumber.getText());
 		try {
+			originalIP = ipaddress.getText();
+			originalPort = port;
 			socket = new Socket(ipaddress.getText(), port);
-			Connection connection = new Connection(socket,eventsToPerform);
+			Connection connection = new Connection(socket,eventsToPerform, eventHandler, this);
 			eventHandler.addConnection(connection);
+			connection.send(new RequestConnectionsPacket());
 			localAddress = socket.getLocalSocketAddress().toString();
-			vectorClock.put(1, 0);
-			vectorClock.put(0, 0);
-			identifier = 1;
+			isConnected = true;
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -204,6 +234,7 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnectClear() {
+		isConnected = false;
 		vectorClock = new HashMap<Integer, Integer>();
 		setTitle("Disconnected");
 		area1.setText("");
@@ -301,5 +332,17 @@ public class DistributedTextEditor extends JFrame {
 
 	public JTextArea getArea(){
     	return area1;
+	}
+
+	public int getOriginalPort() {
+		return originalPort;
+	}
+
+	public String getOriginalIP() {
+		return originalIP;
+	}
+
+	public void setIdentifier(int identifier) {
+		this.identifier = identifier;
 	}
 }

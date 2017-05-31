@@ -1,5 +1,6 @@
 package Project;
 
+import javax.lang.model.type.ArrayType;
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
@@ -8,7 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Created by Simon Purup Eskildsen on 5/5/17.
  */
-public class EventHandler extends AbstractEventHandler{
+public class EventHandler extends Thread{
     private ArrayList<LoggedEvent> eventLog;
     private LinkedList<MyTextEvent> eventsPerformed;
     private LinkedBlockingQueue<Event> eventsToPerform;
@@ -40,10 +41,9 @@ public class EventHandler extends AbstractEventHandler{
     }
 
     public void handleEvent(Event event){
-        //TODO: This does not appear to make any sense at all, we perform the event if we have priority 0
-        // or the vectorclock of the event has the same value for our process as the process own vectorclock has
         HashMap<Integer, Integer> vectorClock = dte.getVectorClock();
-        if(dte.getIdentifier() == 0 || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
+        //TODO initialize Vectorclocks and identifier so we are able to write without being connected
+        if(dte.getIdentifier() <= event.getSource() || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
             eventsPerformed.add(event.getTextEvent());
             executeEvent(event.getTextEvent());
             eventLog.add(new LoggedEvent(new Event(event.getTextEvent(),event.getSource(),event.getTimeStamp()),
@@ -71,16 +71,10 @@ public class EventHandler extends AbstractEventHandler{
         //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
         //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
         if(!dte.getIdentifier().equals(event.getSource())) {
-            System.out.println("");
-            for (Object o : event.getTimeStamp().entrySet()) {
-                Map.Entry pair = (Map.Entry) o;
-                if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
-                    vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
-                }
-            }
+            updateVectorClocks(event.getTimeStamp());
         }
         //If it is our own event send it after all other logic to the peers updating the vectorclock first
-        else {
+        else if(dte.getIdentifier().equals(event.getSource())){
             if(!(vectorClock.get(dte.getIdentifier()) == null))
             vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
             else
@@ -91,10 +85,101 @@ public class EventHandler extends AbstractEventHandler{
         dte.setVectorClock(vectorClock);
     }
 
-    private void sendEvent(Event event){
+    /** Rearranges the order of the events provided, such that the provided text event is transformed into
+     * a resulting (possible set of) text event(s) that updates the current text as if e happened before
+     * the provided list of events. It is important that <param>eventsToUndo</param> is ordered in accordance
+     * with the order that the events were performed (latest event first, then the second latest and so on).
+     * @param eventsToUndo Ordered list of event to undo, latest first
+     * @param e The event to be performed before the events in <param>eventsToUndo</param>
+     * @return List of events to be performed inorder to carry out the change of the text event <param>e</param>.
+     * The list is ordered such that pullFirst() will give the event that is to be carried out first.
+     */
+    private LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
+        LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
+        if(eventsToUndo.size() == 0){
+            eventsToPerform.add(e);
+            return eventsToPerform;
+        }
+        eventsToPerform.add(e);
+        for(MyTextEvent A : eventsToUndo) {
+            MyTextEvent B = eventsToPerform.pollFirst();
+            while(B != null) {
+                MyTextEvent new_event = null;
+                if (A instanceof TextInsertEvent) {
+                    if (B instanceof TextInsertEvent) {
+                        TextInsertEvent B_tie = (TextInsertEvent) B;
+                        if (B.getOffset() < A.getOffset())
+                            new_event = B;
+                        else {
+                            int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
+                            new_event = new TextInsertEvent(offset, B_tie.getText());
+                        }
+                    } else {
+                        if (B.getOffset() >= A.getOffset()) {
+                            int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
+                            new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
+                        } else if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset()) {
+                            TextRemoveEvent B1 = new TextRemoveEvent(B.getOffset(),A.getOffset()-B.getOffset());
+                            tempList.add(B1);
+                            new_event = new TextRemoveEvent(B.getOffset(),((TextRemoveEvent) B).getLength()-B1.getLength());
+                        } else
+                            new_event = B;
+                    }
+                } else {
+                    if (B instanceof TextInsertEvent) {
+                        if (B.getOffset() >= A.getOffset()) {
+                            if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+                                int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
+                                new_event = new TextInsertEvent(offset, ((TextInsertEvent) B).getText());
+                            } else {
+                                new_event = new TextInsertEvent(A.getOffset(), ((TextInsertEvent) B).getText());
+                            }
+                        } else
+                            new_event = B;
+                    } else {
+                        if (B.getOffset() >= A.getOffset()) {
+                            if (B.getOffset() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+                                int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
+                                new_event = new TextRemoveEvent(offset, ((TextRemoveEvent) B).getLength());
+                            } else {
+                                if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+                                    int length = B.getOffset() + ((TextRemoveEvent) B).getLength() - A.getOffset() - ((TextRemoveEvent) A).getLength();
+                                    new_event = new TextRemoveEvent(A.getOffset(), length);
+                                } else
+                                    new_event = null;
+                            }
+                        } else if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset()) {
+                            if (B.getOffset() + ((TextRemoveEvent) B).getLength() >= A.getOffset() + ((TextRemoveEvent) A).getLength()) {
+                                int length = ((TextRemoveEvent) B).getLength() - ((TextRemoveEvent) A).getLength();
+                                new_event = new TextRemoveEvent(B.getOffset(), length);
+                            } else {
+                                new_event = new TextRemoveEvent(B.getOffset(), A.getOffset() - B.getOffset());
+                            }
+                        } else
+                            new_event = B;
+                    }
+                }
+                tempList.add(new_event);
+                B = eventsToPerform.pollFirst();
+            }
+            eventsToPerform = tempList;
+            tempList = new LinkedList<>();
+        }
+        return eventsToPerform;
+    }
+
+    public void sendEvent(Packet event){
         for(Connection con: connections) {
             con.send(event);
         }
+    }
+
+    public synchronized LinkedList<String> getConnections(){
+        LinkedList<String> ips = new LinkedList<String>();
+        for(Connection c : connections){
+            ips.add(c.getIP());
+        }
+        return ips;
     }
 
     private void executeEvent(MyTextEvent textEvent) {
@@ -119,7 +204,21 @@ public class EventHandler extends AbstractEventHandler{
         }
     }
 
-    public void addConnection(Connection con){
+    public synchronized void addConnection(Connection con){
         connections.add(con);
+    }
+
+    public void updateVectorClocks(HashMap<Integer, Integer> newVectorClock) {
+        HashMap<Integer,Integer> vectorClock = dte.getVectorClock();
+        for (Object o : newVectorClock.entrySet()) {
+            Map.Entry pair = (Map.Entry) o;
+            if(vectorClock.get(pair.getKey()) == null){
+                vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
+            }
+            else if (vectorClock.get(pair.getKey()) < (int) pair.getValue()) {
+                vectorClock.put((Integer) pair.getKey(), (int) pair.getValue());
+            }
+        }
+        dte.setVectorClock(vectorClock);
     }
 }

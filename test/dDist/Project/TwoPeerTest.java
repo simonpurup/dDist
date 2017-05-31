@@ -85,6 +85,80 @@ public class TwoPeerTest {
         }
     }
 
+    @Test
+    public void textTest1(){
+        addTextInsert("a",0,dte1.getArea());
+        addTextInsert("b",0,dte1.getArea());
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertEquals("ba",dte1.getArea().getText());
+        assertEquals("ba",dte2.getArea().getText());
+        addTextInsert("c",0,dte1.getArea());
+        addTextInsert("d",0,dte1.getArea());
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertEquals("dcba",dte1.getArea().getText());
+        assertEquals("dcba",dte2.getArea().getText());
+    }
+
+    @Test
+    public void causalTest1(){
+        addTextInsert("a",0,dte1.getArea());
+        addTextInsert("b",0,dte2.getArea());
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertEquals(dte1.getArea().getText(),dte2.getArea().getText());
+        assertEquals("ba",dte1.getArea().getText());
+    }
+
+    @Test
+    public void causalTest2(){
+        addTextInsert("a",0,dte1.getArea());
+        addTextInsert("b",0,dte2.getArea());
+        addTextInsert("a",0,dte1.getArea());
+        addTextInsert("b",0,dte2.getArea());
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea().getText(), "bbaa" );
+        assertEquals(dte2.getArea().getText(), "bbaa" );
+    }
+
+    @Test
+    public void shouldBeText_Testb_texts(){
+        addTextInsert("Test text",0,dte1.getArea());
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        addTextInsert("b",4,dte2.getArea());
+        addTextInsert("s",9,dte1.getArea());
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea().getText(), "Testb texts" );
+        assertEquals(dte2.getArea().getText(), "Testb texts" );
+    }
+
+    @Test
+    public void removalTest(){
+        addTextInsert("Aa",0,dte1.getArea());
+        addTextRemove(0,1,dte1.getArea());
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        assertEquals("a",dte1.getArea().getText());
+        assertEquals("a",dte2.getArea().getText());
+    }
+
+    @Test
+    public void causalRemovalTest(){
+        addTextInsert("cc",0,dte2.getArea());
+        addTextInsert("Aa",0,dte1.getArea());
+        addTextRemove(0,2,dte2.getArea());
+        try {Thread.sleep(200);} catch (InterruptedException e) {}
+        assertEquals(dte2.getArea().getText(), dte1.getArea().getText());
+    }
 
     public void addTextInsert(String text, int offset, JTextArea area){
         EventQueue.invokeLater(new Runnable() {

@@ -6,7 +6,7 @@ import java.util.HashMap;
 /**
  * Created by Simon Purup Eskildsen on 5/5/17.
  */
-public class Event implements Serializable{
+public class Event implements Packet{
     private MyTextEvent textEvent;
     private Integer source;
     private HashMap<Integer, Integer> timeStamp;
