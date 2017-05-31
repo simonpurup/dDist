@@ -27,5 +27,10 @@ public class TextInsertEvent extends MyTextEvent {
 		else
 			return false;
 	}
+
+	@Override
+	public String toString() {
+		return text + " " + super.getOffset();
+	}
 }
 

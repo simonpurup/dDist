@@ -47,23 +47,24 @@ public class Connection implements Runnable {
                 checkDelayedEvents();
                 Object o =  inputStream.readObject();
                 if(o instanceof  Event) {
-                    boolean deliver = true;
-                    Event e = (Event) o;
-                    HashMap<Integer,Integer> vc_e = e.getTimeStamp();
-                    HashMap<Integer,Integer> vc_l = dte.getVectorClock();
-                    if(vc_e.get(e.getSource()) == vc_l.get(e.getSource())+1){
-                        for(int id : vc_e.keySet()){
-                            if(!(vc_e.get(id) <= vc_l.get(id) || id == e.getSource())){
-                                deliver = false;
-                            }
-                        }
-                        if(deliver)
-                            eventsToPerform.add(e);
-                        else
-                            delayedEvents.add(e);
-                    } else{
-                        delayedEvents.add(e);
-                    }
+//                    boolean deliver = true;
+//                    Event e = (Event) o;
+//                    HashMap<Integer,Integer> vc_e = e.getTimeStamp();
+//                    HashMap<Integer,Integer> vc_l = dte.getVectorClock();
+//                    if(vc_e.get(e.getSource()) == vc_l.get(e.getSource())+1){
+//                        for(int id : vc_e.keySet()){
+//                            if(!(vc_e.get(id) <= vc_l.get(id) || id == e.getSource())){
+//                                deliver = false;
+//                            }
+//                        }
+//                        if(deliver)
+//                            eventsToPerform.add(e);
+//                        else
+//                            delayedEvents.add(e);
+//                    } else{
+//                        delayedEvents.add(e);
+//                    }
+                    eventsToPerform.add((Event) o);
                 }
                 if(o instanceof  ConnectionsPacket) connectRest(((ConnectionsPacket) o).getIPS());
                 if(o instanceof  ShouldListenPacket) dte.startConnectedListener();
@@ -122,12 +123,11 @@ public class Connection implements Runnable {
                         deliver = false;
                     }
                 }
+                if (deliver)
+                    eventsToPerform.add(e);
+                else
+                    newList.add(e);
             } else
-                deliver = false;
-
-            if (deliver)
-                eventsToPerform.add(e);
-            else
                 newList.add(e);
         }
         delayedEvents = newList;

@@ -243,10 +243,9 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnect() {
-		vectorClock = new HashMap<Integer, Integer>();
+		vectorClock = new HashMap<>();
 		setTitle("Disconnected");
 		eventHandler.disconnect();
-		area1.setText("");
 		changed = false;
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);
@@ -319,6 +318,7 @@ public class DistributedTextEditor extends JFrame {
 	public HashMap<Integer, Integer> getVectorClock() {
 		return vectorClock;
 	}
+
 	public void setVectorClock(HashMap<Integer, Integer> vectorClock) {
 		this.vectorClock = vectorClock;
 	}

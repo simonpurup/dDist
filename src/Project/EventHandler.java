@@ -6,11 +6,10 @@ import java.awt.*;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * Created by Simon Purup Eskildsen on 5/5/17.
+/** Created by Simon Purup Eskildsen on 5/5/17.
  */
 public class EventHandler extends AbstractEventHandler{
-    private ArrayList<LoggedEvent> eventLog;
+    private LinkedList<Event> eventLog;
     private LinkedList<MyTextEvent> eventsPerformed;
     private LinkedBlockingQueue<Event> eventsToPerform;
     private DistributedTextEditor dte;
@@ -24,7 +23,7 @@ public class EventHandler extends AbstractEventHandler{
         area = dte.getArea();
         eventsPerformed = dte.getEventsPerformed();
         connections = new ArrayList<>();
-        eventLog = new ArrayList<>();
+        eventLog = new LinkedList<>();
     }
 
     @Override
@@ -33,6 +32,7 @@ public class EventHandler extends AbstractEventHandler{
         while(!isInterrupted()){
             try {
                 Event event = eventsToPerform.take();
+                System.out.println(event.getTextEvent() + " " + event.getTimeStamp());
                 handleEvent(event);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -41,46 +41,47 @@ public class EventHandler extends AbstractEventHandler{
     }
 
     public void handleEvent(Event event){
+         //TODO initialize Vectorclocks and identifier so we are able to write without being connected
         HashMap<Integer, Integer> vectorClock = dte.getVectorClock();
-        //TODO initialize Vectorclocks and identifier so we are able to write without being connected
-        if(dte.getIdentifier() <= event.getSource() || event.getTimeStamp().get(dte.getIdentifier()).equals(vectorClock.get(dte.getIdentifier()))){
-            eventsPerformed.add(event.getTextEvent());
-            executeEvent(event.getTextEvent());
-            eventLog.add(new LoggedEvent(new Event(event.getTextEvent(),event.getSource(),event.getTimeStamp()),
-                    System.nanoTime()));
-        }
-        //If Local(V[me]) > Message(V[me] && Priority(me) < priority(him) rollback until Local(V[me]) == Message(V[him])
-        //then print
-        else{
-            ArrayList<MyTextEvent> before = new ArrayList<>();
-            for(int i = eventLog.size() - 1; i >= 0; i--){
-                LoggedEvent e = eventLog.get(i);
-                if(e.event.getTimeStamp().get(dte.getIdentifier()) > event.getTimeStamp().get(dte.getIdentifier())){
-                    before.add(e.event.getTextEvent());
+
+        ArrayList<MyTextEvent> eventsToRollBack = new ArrayList<>();
+        HashMap<Integer,Integer> vc_l, vc_e = event.getTimeStamp();
+        boolean leq;
+        for(Event e : eventLog){
+            vc_l = e.getTimeStamp();
+            leq = true;
+            for (int id : vc_l.keySet()) {
+                if (vc_l.get(id) > vc_e.get(id)) {
+                    leq = false;
                 }
             }
-
-            LinkedList<MyTextEvent> eventsToRollBack = undoTextEvents(before,event.getTextEvent());
-            for(MyTextEvent e : eventsToRollBack){
-                eventsPerformed.add(e);
-                executeEvent(e);
-                eventLog.add(new LoggedEvent(new Event(e,event.getSource(),event.getTimeStamp()),
-                        System.nanoTime()));
+            if(leq || e.getSource() > event.getSource()){
+                break;
             }
+            eventsToRollBack.add(e.getTextEvent());
         }
+        System.out.println("Dte: " + dte.getIdentifier() + " " + eventsToRollBack);
+        LinkedList<MyTextEvent> eventsToShow = undoTextEvents(eventsToRollBack,event.getTextEvent());
+        for(MyTextEvent mte : eventsToShow){
+            eventsPerformed.add(mte);
+            executeEvent(mte);
+        }
+
         //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
         //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
         if(!dte.getIdentifier().equals(event.getSource())) {
+            eventLog.add(eventsToRollBack.size(),event);
             updateVectorClocks(event.getTimeStamp());
         }
-        //If it is our own event send it after all other logic to the peers updating the vectorclock first
+        //If it is our own event send it after all other logic to the peers updating the vectorClock first
         else if(dte.getIdentifier().equals(event.getSource())){
             if(!(vectorClock.get(dte.getIdentifier()) == null))
-            vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
+                vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
             else
-                vectorClock.put(dte.getIdentifier(),0);
+                vectorClock.put(dte.getIdentifier(), 1);
             event.setTimeStamp(vectorClock);
-            sendEvent(new Event(event.getTextEvent(),dte.getIdentifier(),(HashMap<Integer,Integer>)vectorClock.clone()));
+            eventLog.add(eventsToRollBack.size(),event);
+            sendEvent(new Event(event.getTextEvent(), dte.getIdentifier(), (HashMap<Integer, Integer>) vectorClock.clone()));
         }
         dte.setVectorClock(vectorClock);
     }

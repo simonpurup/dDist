@@ -81,11 +81,12 @@ public class DocumentEventCapturer extends DocumentFilter {
 
 	public void replace(FilterBypass fb, int offset, int length, String str, AttributeSet a)
 			throws BadLocationException {
-	/* Queue a copy of the event and then modify the text */
-		if (length > 0) {
+		System.out.println(str + " " + offset + " " + length);
+		/* Queue a copy of the event and then modify the text */
+		if (length > 0 && str == null) {
 			MyTextEvent textEvent = new TextRemoveEvent(offset, length);
-			if(eventsPerformed.peekFirst() != null &&
-					eventsPerformed.peekFirst().equals(textEvent)){
+			if (eventsPerformed.peekFirst() != null &&
+					eventsPerformed.peekFirst().equals(textEvent)) {
 				eventsPerformed.remove(textEvent);
 				super.remove(fb, offset, length);
 			} else {
@@ -93,18 +94,24 @@ public class DocumentEventCapturer extends DocumentFilter {
 						dte.getIdentifier(),
 						dte.getVectorClock()));
 			}
-		}
-		if(str!=null) {
+		} else if (str != null && length == 0) {
 			TextInsertEvent textEvent = new TextInsertEvent(offset, str);
-			if(eventsPerformed.peekFirst() != null &&
-					eventsPerformed.peekFirst().equals(textEvent)){
+			if (eventsPerformed.peekFirst() != null &&
+					eventsPerformed.peekFirst().equals(textEvent)) {
 				eventsPerformed.remove(textEvent);
-				super.insertString(fb, offset, str, a);
+				super.replace(fb, offset, length, str, a);
 			} else {
 				eventsToPerform.add(new Event(textEvent,
 						dte.getIdentifier(),
 						dte.getVectorClock()));
 			}
+		} else {
+			if (length > 0) {
+				eventsToPerform.add(new Event(new TextRemoveEvent(offset, length),
+						dte.getIdentifier(), dte.getVectorClock()));
+			}
+			eventsToPerform.add(new Event(new TextInsertEvent(offset,str),
+					dte.getIdentifier(), dte.getVectorClock()));
 		}
 	}
 }

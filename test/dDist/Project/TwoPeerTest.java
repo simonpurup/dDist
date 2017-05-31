@@ -112,12 +112,11 @@ public class TwoPeerTest {
         addTextInsert("a",0,dte1.getArea());
         addTextInsert("b",0,dte2.getArea());
         try {
-            Thread.sleep(200);
+            Thread.sleep(400);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         assertEquals(dte1.getArea().getText(),dte2.getArea().getText());
-        assertEquals("ba",dte1.getArea().getText());
     }
 
     @Test
@@ -127,8 +126,7 @@ public class TwoPeerTest {
         addTextInsert("a",0,dte1.getArea());
         addTextInsert("b",0,dte2.getArea());
         try {Thread.sleep(200);} catch (InterruptedException e) {}
-        assertEquals(dte1.getArea().getText(), "bbaa" );
-        assertEquals(dte2.getArea().getText(), "bbaa" );
+        assertEquals(dte1.getArea().getText(), dte2.getArea().getText());
     }
 
     @Test
@@ -138,6 +136,7 @@ public class TwoPeerTest {
         addTextInsert("b",4,dte2.getArea());
         addTextInsert("s",9,dte1.getArea());
         try {Thread.sleep(200);} catch (InterruptedException e) {}
+        assertEquals(dte1.getArea().getText(), dte2.getArea().getText());
         assertEquals(dte1.getArea().getText(), "Testb texts" );
         assertEquals(dte2.getArea().getText(), "Testb texts" );
     }
