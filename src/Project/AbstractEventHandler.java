@@ -30,8 +30,11 @@ public abstract class AbstractEventHandler extends Thread{
                 if (A instanceof TextInsertEvent) {
                     if (B instanceof TextInsertEvent) {
                         TextInsertEvent B_tie = (TextInsertEvent) B;
-                        if (B.getOffset() < A.getOffset())
-                            new_event = B;
+                        if (B.getOffset() < A.getOffset()) {
+                            tempList.add(new TextRemoveEvent(A.getOffset(),((TextInsertEvent) A).getText().length()));
+                            tempList.add(B);
+                            new_event = A;
+                        }
                         else {
                             int addition = ((TextInsertEvent) A).getText().length();
                             if(nObsDeletions!=0) {

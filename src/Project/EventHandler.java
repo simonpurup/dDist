@@ -32,7 +32,6 @@ public class EventHandler extends AbstractEventHandler{
         while(!isInterrupted()){
             try {
                 Event event = eventsToPerform.take();
-                System.out.println(event.getTextEvent() + " " + event.getTimeStamp());
                 handleEvent(event);
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -46,11 +45,11 @@ public class EventHandler extends AbstractEventHandler{
 
         ArrayList<MyTextEvent> eventsToRollBack = new ArrayList<>();
         HashMap<Integer,Integer> vc_l, vc_e = event.getTimeStamp();
-        boolean leq;
         for(Event e : eventLog){
+            System.out.println(e.getTextEvent() + " " + e.getTimeStamp());
             vc_l = e.getTimeStamp();
-            leq = true;
-            for (int id : vc_l.keySet()) {
+            boolean leq = true;
+            for (int id : vc_e.keySet()) {
                 if (vc_l.get(id) > vc_e.get(id)) {
                     leq = false;
                 }
@@ -68,18 +67,17 @@ public class EventHandler extends AbstractEventHandler{
         }
 
         //Syncs vector-clocks For all x: Local(V[x) = max(Local(V[x]),Message(V[x]))
-        //TODO: Should eventually be: Local(V[x) = max(Local(V[x]),Message(V[x])) + 1
         if(!dte.getIdentifier().equals(event.getSource())) {
             eventLog.add(eventsToRollBack.size(),event);
             updateVectorClocks(event.getTimeStamp());
         }
         //If it is our own event send it after all other logic to the peers updating the vectorClock first
-        else if(dte.getIdentifier().equals(event.getSource())){
+        else{
             if(!(vectorClock.get(dte.getIdentifier()) == null))
                 vectorClock.put(dte.getIdentifier(), vectorClock.get(dte.getIdentifier()) + 1);
             else
                 vectorClock.put(dte.getIdentifier(), 1);
-            event.setTimeStamp(vectorClock);
+            event.setTimeStamp((HashMap<Integer, Integer>) vectorClock.clone());
             eventLog.add(eventsToRollBack.size(),event);
             sendEvent(new Event(event.getTextEvent(), dte.getIdentifier(), (HashMap<Integer, Integer>) vectorClock.clone()));
         }
