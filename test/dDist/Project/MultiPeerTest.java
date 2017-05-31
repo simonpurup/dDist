@@ -1,9 +1,9 @@
-package Project;
+package dDist.Project;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import Project.DistributedTextEditor;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Created by malthe on 30/05/2017.
@@ -14,7 +14,7 @@ public class MultiPeerTest {
     DistributedTextEditor dte3;
     DistributedTextEditor dte4;
 
-    @BeforeEach
+    @Before
     public void before(){
         dte1 = new DistributedTextEditor();
         dte2 = new DistributedTextEditor();
