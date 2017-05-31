@@ -147,7 +147,7 @@ public class DistributedTextEditor extends JFrame {
 					listening = false;
 					isConnected = true;
 				} catch (IOException e1) {
-					if(e1 instanceof SocketException && e1.getMessage().equals("Socket closed"))
+					if(e1 instanceof SocketException)
 						if(listening)
 							e1.printStackTrace();
 				}
@@ -166,6 +166,7 @@ public class DistributedTextEditor extends JFrame {
 	}
 
 	public void startConnectedListener() {
+		isConnected = true;
 		DistributedTextEditor dte = this;
 		new Thread(new Runnable() {
 			public void run() {
@@ -181,9 +182,9 @@ public class DistributedTextEditor extends JFrame {
 						socket = serverSocket.accept();
 						Connection connection = new Connection(socket, eventsToPerform, eventHandler, dte);
 						eventHandler.addConnection(connection);
-
 					} catch (IOException e) {
-						e.printStackTrace();
+						if(e instanceof SocketException);
+						else e.printStackTrace();
 					}
 				}
 			}
@@ -208,7 +209,6 @@ public class DistributedTextEditor extends JFrame {
 			eventHandler.addConnection(connection);
 			connection.send(new RequestConnectionsPacket());
 			localAddress = socket.getLocalSocketAddress().toString();
-			isConnected = true;
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -220,10 +220,19 @@ public class DistributedTextEditor extends JFrame {
 
     Action Disconnect = new AbstractAction("Disconnect") {
 	    public void actionPerformed(ActionEvent e) {
-	    	if(!listening)
+			if(!listening) {
 				disconnect();
-	    	else {
-	    		listening = false;
+				if(isConnected){
+					isConnected = false;
+					try {
+						serverSocket.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+			else {
+				listening = false;
 				try {
 					serverSocket.close();
 				} catch (IOException e1) {
@@ -233,20 +242,16 @@ public class DistributedTextEditor extends JFrame {
 		}
 	};
 
-	public void disconnectClear() {
-		isConnected = false;
+	public void disconnect() {
 		vectorClock = new HashMap<Integer, Integer>();
 		setTitle("Disconnected");
+		eventHandler.disconnect();
 		area1.setText("");
 		changed = false;
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);
 	}
 
-	public void disconnect(){
-		//er.disconnect();
-		disconnectClear();
-	}
 
     Action Save = new AbstractAction("Save") {
 	    public void actionPerformed(ActionEvent e) {
