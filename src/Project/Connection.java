@@ -5,6 +5,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -92,23 +93,29 @@ public class Connection implements Runnable {
                     eventHandler.updateVectorClocks(((NewVectorClocksPacket) o).getVectorClock());
                 }
             } catch (IOException e) {
-                //TODO: handle closing of connections
                 if (e instanceof EOFException) {
                     running = false;
-                    eventHandler.disconnectDTE();
+                    //This is legacy coode from our original implementation
+                    //it closed the network whenever a peer failed.
+                    disconnectThis();
                 } else if (e instanceof SocketException) {
                     if (running) {
                         running = false;
-                        eventHandler.disconnectDTE();
+                        disconnectThis();
                     }
                     else
-                        eventHandler.disconnectDTE();
+                        disconnectThis();
                 } else
                     e.printStackTrace();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void disconnectThis() {
+        eventHandler.removeConnection(this);
+        disconnect();
     }
 
     private void checkDelayedEvents(){
@@ -143,11 +150,13 @@ public class Connection implements Runnable {
             Socket socket = null;
             try {
                 socket = new Socket(ip, 40499+i);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-            Connection connection = new Connection(socket,eventsToPerform, eventHandler,dte);
-            eventHandler.addConnection(connection);
+            catch (IOException e) {
+            }
+            if(socket != null) {
+                Connection connection = new Connection(socket, eventsToPerform, eventHandler, dte);
+                eventHandler.addConnection(connection);
+            }
             i++;
             System.out.println(ip);
         }

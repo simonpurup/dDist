@@ -142,9 +142,14 @@ public class EventHandler extends AbstractEventHandler{
         for(Connection c : connections){
             c.disconnect();
         }
+        connections.clear();
     }
 
     public void disconnectDTE() {
         dte.disconnect();
+    }
+
+    public void removeConnection(Connection connection) {
+        connections.remove(connection);
     }
 }

@@ -243,6 +243,7 @@ public class DistributedTextEditor extends JFrame {
 	};
 
 	public void disconnect() {
+		identifier = 0;
 		vectorClock = new HashMap<>();
 		setTitle("Disconnected");
 		eventHandler.disconnect();
@@ -250,7 +251,6 @@ public class DistributedTextEditor extends JFrame {
 		Save.setEnabled(false);
 		SaveAs.setEnabled(false);
 	}
-
 
     Action Save = new AbstractAction("Save") {
 	    public void actionPerformed(ActionEvent e) {
