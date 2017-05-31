@@ -1,13 +1,13 @@
-package Project;
+package dDist.Project;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import Project.DistributedTextEditor;
+import org.junit.Before;
+import org.junit.After;
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 import javax.swing.*;
 import java.awt.*;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by malthe on 29/05/2017.
@@ -17,7 +17,7 @@ public class TwoPeerTest {
     DistributedTextEditor dte1;
     DistributedTextEditor dte2;
 
-    @BeforeEach
+    @Before
     public void before(){
         dte1 = new DistributedTextEditor();
         dte2 = new DistributedTextEditor();
@@ -35,7 +35,7 @@ public class TwoPeerTest {
 
     }
 
-    @AfterEach
+    @After
     public void after(){
         dte1.disconnect();
         dte2.disconnect();
