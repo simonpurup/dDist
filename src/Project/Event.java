@@ -14,7 +14,7 @@ public class Event implements Packet{
     public Event(MyTextEvent myTextEvent, Integer source, HashMap<Integer, Integer> timestamp) {
         //The event
         this.textEvent = myTextEvent;
-        //The identifier of the source, for now the adress of the peer
+        //The identifier of the source, for now the address of the peer
         this.source = source;
         //The vectorclock of the source at the time of the event.
         this.timeStamp = timestamp;

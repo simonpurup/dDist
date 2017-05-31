@@ -42,8 +42,10 @@ public abstract class AbstractEventHandler extends Thread{
                                     if (start < obsDeletions[i][0] + obsDeletions[i][1] && end > obsDeletions[i][0]) {
                                         if (obsDeletions[i][0] <= start) {
                                             addition -= (obsDeletions[i][0] + obsDeletions[i][1]) - start;
+                                            obsDeletions[i][1] -= (obsDeletions[i][0] + obsDeletions[i][1]) - start;
                                         } else {
                                             addition -= end - obsDeletions[i][0];
+                                            obsDeletions[i][1] -= end - obsDeletions[i][0];
                                         }
                                     }
                                 }
