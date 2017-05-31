@@ -73,14 +73,14 @@ public class Connection implements Runnable {
                 //TODO: handle closing of connections
                 if (e instanceof EOFException) {
                     running = false;
-                    //er.disconnectDTE();
+                    eventHandler.disconnectDTE();
                 } else if (e instanceof SocketException) {
                     if (running) {
                         running = false;
-                        //er.disconnectDTE();
+                        eventHandler.disconnectDTE();
                     }
-                    //else
-                        //er.disconnectDTE();
+                    else
+                        eventHandler.disconnectDTE();
                 } else
                     e.printStackTrace();
             } catch (ClassNotFoundException e) {

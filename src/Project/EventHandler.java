@@ -138,4 +138,14 @@ public class EventHandler extends AbstractEventHandler{
         }
         dte.setVectorClock(vectorClock);
     }
+
+    public void disconnect() {
+        for(Connection c : connections){
+            c.disconnect();
+        }
+    }
+
+    public void disconnectDTE() {
+        dte.disconnect();
+    }
 }
