@@ -1,4 +1,4 @@
-package Project;
+package Project.packets;
 
 import Project.packets.Packet;
 

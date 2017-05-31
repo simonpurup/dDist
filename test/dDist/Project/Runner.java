@@ -1,5 +1,7 @@
 package dDist.Project;
 
+import Project.DistributedTextEditor;
+
 /**
  * Created by malthe on 30/05/2017.
  */
