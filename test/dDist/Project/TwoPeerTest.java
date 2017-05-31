@@ -145,7 +145,6 @@ public class TwoPeerTest {
         try {Thread.sleep(200);} catch (InterruptedException e) {}
         addTextInsert("b",4,dte2.getArea());
         addTextRemove(7,1,dte1.getArea());
-        addTextInsert("s",9,dte1.getArea());
         try {Thread.sleep(200);} catch (InterruptedException e) {}
         assertEquals(dte1.getArea().getText(), dte2.getArea().getText());
     }

@@ -64,8 +64,9 @@ public abstract class AbstractEventHandler extends Thread{
                             TextRemoveEvent B1 = new TextRemoveEvent(B.getOffset(),A.getOffset()-B.getOffset());
                             tempList.add(B1);
                             new_event = new TextRemoveEvent(B.getOffset(),((TextRemoveEvent) B).getLength()-B1.getLength());
-                        } else
+                        } else {
                             new_event = B;
+                        }
                     }
                 } else {
                     if (B instanceof TextInsertEvent) {

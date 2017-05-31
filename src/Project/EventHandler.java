@@ -50,7 +50,7 @@ public class EventHandler extends AbstractEventHandler{
             vc_l = e.getTimeStamp();
             boolean leq = true;
             for (int id : vc_e.keySet()) {
-                if (vc_l.get(id) > vc_e.get(id)) {
+                if (vc_l.get(id) != null && vc_l.get(id) > vc_e.get(id)) {
                     leq = false;
                 }
             }
