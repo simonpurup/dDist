@@ -1,6 +1,7 @@
 package Project;
 
-import javax.lang.model.type.ArrayType;
+import Project.packets.Packet;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
@@ -14,23 +15,23 @@ public class EventHandler extends AbstractEventHandler{
     private LinkedBlockingQueue<Event> eventsToPerform;
     private DistributedTextEditor dte;
     private JTextArea area;
-    private ArrayList<Connection> connections;
+    private LinkedBlockingQueue<Connection> connections;
 
     public EventHandler(LinkedBlockingQueue<Event> eventsToPerform, DistributedTextEditor dte) {
-        super();
         this.eventsToPerform = eventsToPerform;
         this.dte = dte;
         area = dte.getArea();
         eventsPerformed = dte.getEventsPerformed();
-        connections = new ArrayList<>();
+        connections = new LinkedBlockingQueue<>();
         eventLog = new LinkedList<>();
     }
 
     @Override
     public void run() {
-        //TODO removing old elements from the logged queue should be added to the loop
         while(!isInterrupted()){
             try {
+                if(!connections.isEmpty())
+                    checkDelayedEvents();
                 Event event = eventsToPerform.take();
                 handleEvent(event);
             } catch (InterruptedException e) {
@@ -40,13 +41,11 @@ public class EventHandler extends AbstractEventHandler{
     }
 
     public void handleEvent(Event event){
-         //TODO initialize Vectorclocks and identifier so we are able to write without being connected
         HashMap<Integer, Integer> vectorClock = dte.getVectorClock();
 
         ArrayList<MyTextEvent> eventsToRollBack = new ArrayList<>();
         HashMap<Integer,Integer> vc_l, vc_e = event.getTimeStamp();
         for(Event e : eventLog){
-            System.out.println(e.getTextEvent() + " " + e.getTimeStamp());
             vc_l = e.getTimeStamp();
             boolean leq = true;
             for (int id : vc_e.keySet()) {
@@ -59,7 +58,6 @@ public class EventHandler extends AbstractEventHandler{
             }
             eventsToRollBack.add(e.getTextEvent());
         }
-        System.out.println("Dte: " + dte.getIdentifier() + " " + eventsToRollBack);
         LinkedList<MyTextEvent> eventsToShow = undoTextEvents(eventsToRollBack,event.getTextEvent());
         for(MyTextEvent mte : eventsToShow){
             eventsPerformed.add(mte);
@@ -87,6 +85,12 @@ public class EventHandler extends AbstractEventHandler{
     public void sendEvent(Packet event){
         for(Connection con: connections) {
             con.send(event);
+        }
+    }
+
+    private void checkDelayedEvents(){
+        for(Connection con: connections) {
+            con.checkDelayedEvents();
         }
     }
 
@@ -143,10 +147,6 @@ public class EventHandler extends AbstractEventHandler{
             c.disconnect();
         }
         connections.clear();
-    }
-
-    public void disconnectDTE() {
-        dte.disconnect();
     }
 
     public void removeConnection(Connection connection) {

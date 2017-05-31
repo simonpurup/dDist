@@ -1,4 +1,4 @@
-package Project;
+package Project.packets;
 
 /**
  * Created by malthe on 30/05/2017.

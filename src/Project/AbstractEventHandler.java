@@ -20,7 +20,7 @@ public abstract class AbstractEventHandler extends Thread{
      * The list is ordered such that pullFirst() will give the event that is to be carried out first.
      */
     public LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
-        int obsDeletions[][] = new int[5][2], nObsDeletions = 0;
+        int obsDeletions[][] = new int[100][2], nObsDeletions = 0;
         LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
         eventsToPerform.add(e);
         for(MyTextEvent A : eventsToUndo) {

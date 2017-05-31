@@ -1,11 +1,13 @@
 package Project;
 
+import Project.packets.Packet;
+
 import java.util.LinkedList;
 
 /**
  * Created by malthe on 30/05/2017.
  */
-public class ConnectionsPacket implements Packet{
+public class ConnectionsPacket implements Packet {
     private final LinkedList<String> ips;
 
     public ConnectionsPacket(LinkedList<String> ips){

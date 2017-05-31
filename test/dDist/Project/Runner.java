@@ -1,4 +1,4 @@
-package Project;
+package dDist.Project;
 
 /**
  * Created by malthe on 30/05/2017.

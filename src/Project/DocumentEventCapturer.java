@@ -1,5 +1,6 @@
 package Project;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 import javax.swing.text.AttributeSet;
@@ -58,7 +59,7 @@ public class DocumentEventCapturer extends DocumentFilter {
 			} else {
 				eventsToPerform.add(new Event(textEvent,
 						dte.getIdentifier(),
-						dte.getVectorClock()));
+						(HashMap<Integer, Integer>) dte.getVectorClock().clone()));
 			}
 		}
 
@@ -81,7 +82,6 @@ public class DocumentEventCapturer extends DocumentFilter {
 
 	public void replace(FilterBypass fb, int offset, int length, String str, AttributeSet a)
 			throws BadLocationException {
-		System.out.println(str + " " + offset + " " + length);
 		/* Queue a copy of the event and then modify the text */
 		if (length > 0 && str == null) {
 			MyTextEvent textEvent = new TextRemoveEvent(offset, length);

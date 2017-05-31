@@ -1,5 +1,7 @@
 package Project;
 
+import Project.packets.RequestConnectionsPacket;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -103,9 +105,6 @@ public class DistributedTextEditor extends JFrame {
 
 		eventHandler = new EventHandler(eventsToPerform,this);
 		eventHandler.start();
-		//er = new EventReplayer(dec, area1, this);
-		//ert = new Thread(er);
-		//ert.start();
 	}
 
     private KeyListener k1 = new KeyAdapter() {

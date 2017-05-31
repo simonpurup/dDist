@@ -1,11 +1,12 @@
 package Project;
 
+import Project.packets.*;
+
 import javax.swing.text.AbstractDocument;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
@@ -45,35 +46,33 @@ public class Connection implements Runnable {
         running = true;
         while (running) {
             try {
-                checkDelayedEvents();
                 Object o =  inputStream.readObject();
                 if(o instanceof  Event) {
-//                    boolean deliver = true;
-//                    Event e = (Event) o;
-//                    HashMap<Integer,Integer> vc_e = e.getTimeStamp();
-//                    HashMap<Integer,Integer> vc_l = dte.getVectorClock();
-//                    if(vc_e.get(e.getSource()) == vc_l.get(e.getSource())+1){
-//                        for(int id : vc_e.keySet()){
-//                            if(!(vc_e.get(id) <= vc_l.get(id) || id == e.getSource())){
-//                                deliver = false;
-//                            }
-//                        }
-//                        if(deliver)
-//                            eventsToPerform.add(e);
-//                        else
-//                            delayedEvents.add(e);
-//                    } else{
-//                        delayedEvents.add(e);
-//                    }
-                    eventsToPerform.add((Event) o);
+                    boolean deliver = true;
+                    Event e = (Event) o;
+                    HashMap<Integer,Integer> vc_e = e.getTimeStamp();
+                    HashMap<Integer,Integer> vc_l = dte.getVectorClock();
+                    if(vc_e.get(e.getSource()) == vc_l.get(e.getSource())+1){
+                        for(int id : vc_e.keySet()){
+                            if(!(vc_e.get(id) <= vc_l.get(id) || id == e.getSource())){
+                                deliver = false;
+                            }
+                        }
+                        if(deliver)
+                            eventsToPerform.add(e);
+                        else
+                            delayedEvents.add(e);
+                    } else{
+                        delayedEvents.add(e);
+                    }
                 }
                 if(o instanceof  ConnectionsPacket) connectRest(((ConnectionsPacket) o).getIPS());
-                if(o instanceof  ShouldListenPacket) dte.startConnectedListener();
-                if(o instanceof  RequestConnectionsPacket){
+                if(o instanceof ShouldListenPacket) dte.startConnectedListener();
+                if(o instanceof RequestConnectionsPacket){
                     LinkedList<String> connectionIPS = eventHandler.getConnections();
                     send(new ConnectionsPacket(connectionIPS));
                 }
-                if(o instanceof  RequestStatusPacket){
+                if(o instanceof RequestStatusPacket){
                     int highestIdentifier = Collections.max(dte.getVectorClock().keySet());
                     HashMap<Integer, Integer> newVectorClock = dte.getVectorClock();
                     newVectorClock.put(highestIdentifier + 1, 0);
@@ -95,7 +94,7 @@ public class Connection implements Runnable {
             } catch (IOException e) {
                 if (e instanceof EOFException) {
                     running = false;
-                    //This is legacy coode from our original implementation
+                    //This is legacy code from our original implementation
                     //it closed the network whenever a peer failed.
                     disconnectThis();
                 } else if (e instanceof SocketException) {
@@ -118,12 +117,13 @@ public class Connection implements Runnable {
         disconnect();
     }
 
-    private void checkDelayedEvents(){
+    protected void checkDelayedEvents(){
         ArrayList<Event> newList = new ArrayList<>();
         for(Event e : delayedEvents) {
             boolean deliver = true;
             HashMap<Integer, Integer> vc_e = e.getTimeStamp();
             HashMap<Integer, Integer> vc_l = dte.getVectorClock();
+            vc_l.putIfAbsent(e.getSource(), 0);
             if (vc_e.get(e.getSource()) == vc_l.get(e.getSource()) + 1) {
                 for (int id : vc_e.keySet()) {
                     if (!(vc_e.get(id) <= vc_l.get(id) || id == e.getSource())) {
@@ -191,5 +191,4 @@ public class Connection implements Runnable {
         s = s.substring(1);
         return s;
     }
-
 }

@@ -1,4 +1,4 @@
-package Project;
+package Project.packets;
 
 import java.io.Serializable;
 
