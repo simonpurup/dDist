@@ -144,16 +144,16 @@ public class TestUndoTextEvents {
 
     @Test
     //Test text remove event followed by text insert event
-    public void shouldBe_abxxf(){
-        eventsToUndo.add(new TextRemoveEvent(1,3));
-        eventsToUndo.add(new TextInsertEvent(0,"ab"));
-        MyTextEvent eventToPerform = new TextInsertEvent(5,"f");
+    public void shouldBe_cc(){
+        eventsToUndo.add(new TextRemoveEvent(0,2));
+        eventsToUndo.add(new TextInsertEvent(0,"aa"));
+        MyTextEvent eventToPerform = new TextInsertEvent(0,"cc");
         LinkedList<MyTextEvent> events = handler.undoTextEvents(eventsToUndo,eventToPerform);
         assertEquals(1, events.size());
         assertEquals(true, events.peek() instanceof TextInsertEvent);
         TextInsertEvent event = (TextInsertEvent) events.poll();
-        assertEquals(4, event.getOffset());
-        assertEquals("f", event.getText());
+        assertEquals(0, event.getOffset());
+        assertEquals("cc", event.getText());
     }
 
     @Test

@@ -101,6 +101,7 @@ public class EventHandler extends Thread{
      * The list is ordered such that pullFirst() will give the event that is to be carried out first.
      */
     public LinkedList<MyTextEvent> undoTextEvents(ArrayList<MyTextEvent> eventsToUndo, MyTextEvent e){
+        int obsDeletions[][] = new int[5][2], nObsDeletions = 0;
         LinkedList<MyTextEvent> eventsToPerform = new LinkedList<>(), tempList = new LinkedList<>();
         eventsToPerform.add(e);
         for(MyTextEvent A : eventsToUndo) {
@@ -113,7 +114,22 @@ public class EventHandler extends Thread{
                         if (B.getOffset() < A.getOffset())
                             new_event = B;
                         else {
-                            int offset = B.getOffset() + ((TextInsertEvent) A).getText().length();
+                            int addition = ((TextInsertEvent) A).getText().length();
+                            if(nObsDeletions!=0) {
+                                int start=A.getOffset(), end=A.getOffset()+((TextInsertEvent) A).getText().length();
+                                for(int i=0;i<nObsDeletions;i++) {
+                                    //Make sure that the end is not before beginning of obsRemove and that start is not
+                                    //after end of obsRemove
+                                    if (start < obsDeletions[i][0] + obsDeletions[i][1] && end > obsDeletions[i][0]) {
+                                        if (obsDeletions[i][0] <= start) {
+                                            addition -= (obsDeletions[i][0] + obsDeletions[i][1]) - start;
+                                        } else {
+                                            addition -= end - obsDeletions[i][0];
+                                        }
+                                    }
+                                }
+                            }
+                            int offset = B.getOffset() + addition;
                             new_event = new TextInsertEvent(offset, B_tie.getText());
                         }
                     } else {
@@ -134,7 +150,10 @@ public class EventHandler extends Thread{
                                 int offset = B.getOffset() - ((TextRemoveEvent) A).getLength();
                                 new_event = new TextInsertEvent(offset, ((TextInsertEvent) B).getText());
                             } else {
+                                obsDeletions[nObsDeletions][0] = A.getOffset();
+                                obsDeletions[nObsDeletions][1] = ((TextRemoveEvent) A).getLength();
                                 new_event = new TextInsertEvent(A.getOffset(), ((TextInsertEvent) B).getText());
+                                nObsDeletions++;
                             }
                         } else
                             new_event = B;
